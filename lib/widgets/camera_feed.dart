@@ -1,6 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show DeviceOrientation;
+import 'package:flutter/services.dart' show MethodChannel;
 
 import '../ml/frame.dart';
 
@@ -32,6 +32,7 @@ class _CameraFeedState extends State<CameraFeed> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _readScreenRotation();
     _start();
   }
 
@@ -47,7 +48,8 @@ class _CameraFeedState extends State<CameraFeed> with WidgetsBindingObserver {
         imageFormatGroup: ImageFormatGroup.yuv420,
       );
       await cam.initialize(); // asks for camera permission the first time
-      await cam.startImageStream((img) => _onImage(img, _uprightRotation(back, cam.value.deviceOrientation)));
+      // Frame turn = sensor angle - screen angle (Android's own formula for the back camera).
+      await cam.startImageStream((img) => _onImage(img, (back.sensorOrientation - _screenDegrees + 360) % 360));
       if (!mounted) return await cam.dispose();
       setState(() => _camera = cam);
     } catch (e) {
@@ -57,27 +59,23 @@ class _CameraFeedState extends State<CameraFeed> with WidgetsBindingObserver {
     }
   }
 
-  /// Clockwise degrees to turn a sensor frame so it matches what's on screen, however the phone
-  /// is held. The sensor is mounted at a fixed angle (usually 90°, right for portrait); in
-  /// landscape the screen has turned a quarter, so the frame needs a quarter turn more or less.
-  ///
-  /// Flutter's landscapeLeft/Right are named the opposite way round to Android's ROTATION_90/270,
-  /// so the ML Kit table (landscapeLeft = 90) turned frames 180° the wrong way: boxes moved
-  /// opposite to the object. Here landscapeLeft = 270.
-  int _uprightRotation(CameraDescription camera, DeviceOrientation phone) {
-    // The screen only turns when auto-rotate lets it: follow the screen, not the raw sensor.
-    final screenLandscape = _screenLandscape;
-    final turn = switch (phone) {
-      DeviceOrientation.landscapeLeft when screenLandscape => 270,
-      DeviceOrientation.landscapeRight when screenLandscape => 90,
-      _ when screenLandscape => 270,
-      _ => 0, // screen is portrait (rotation locked, or held upright)
-    };
-    return (camera.sensorOrientation - turn + 360) % 360;
+  /// How far the screen has turned from the phone's natural (portrait) position: 0/90/180/270.
+  /// Asked from Android (MainActivity.kt): neither Flutter nor the camera plugin reports it
+  /// reliably, and guessing from the camera plugin turned landscape frames the wrong way.
+  int _screenDegrees = 0;
+  static const _display = MethodChannel('ginlo/display');
+
+  Future<void> _readScreenRotation() async {
+    try {
+      _screenDegrees = await _display.invokeMethod<int>('rotationDegrees') ?? 0;
+    } catch (_) {
+      _screenDegrees = 0; // tests / no native side: assume portrait
+    }
   }
 
-  /// Updated on every build from the screen's actual shape.
-  bool _screenLandscape = false;
+  /// Screen size changed, e.g. the phone was turned: read the rotation again.
+  @override
+  void didChangeMetrics() => _readScreenRotation();
 
   void _onImage(CameraImage img, int rotation) {
     if (_busy || !mounted) return; // still working on the previous frame
@@ -116,7 +114,7 @@ class _CameraFeedState extends State<CameraFeed> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final screen = MediaQuery.sizeOf(context);
-    _screenLandscape = screen.width > screen.height;
+    final landscape = screen.width > screen.height;
     final cam = _camera;
     if (cam == null) {
       return Center(
@@ -132,7 +130,7 @@ class _CameraFeedState extends State<CameraFeed> with WidgetsBindingObserver {
         final s = cam.value.previewSize;
         final long = s == null ? 16.0 : (s.width > s.height ? s.width : s.height);
         final short = s == null ? 9.0 : (s.width > s.height ? s.height : s.width);
-        final aspect = _screenLandscape ? long / short : short / long;
+        final aspect = landscape ? long / short : short / long;
         var w = box.maxWidth, h = w / aspect;
         if (h > box.maxHeight) {
           h = box.maxHeight;

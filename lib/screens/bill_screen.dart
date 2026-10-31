@@ -135,8 +135,8 @@ class _LiveBillState extends State<_LiveBill> {
               const Divider(),
               Row(
                 children: [
-                  Expanded(child: Text('Total', style: Theme.of(context).textTheme.titleMedium)),
-                  Text('₹${total.toStringAsFixed(2)}', style: Theme.of(context).textTheme.titleMedium),
+                  Expanded(child: Text('Total', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600))),
+                  Text('₹${total.toStringAsFixed(2)}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 ],
               ),
             ],
@@ -148,7 +148,7 @@ class _LiveBillState extends State<_LiveBill> {
             child: Text(
               'detect ${r.preMs + r.inferMs + r.postMs} ms · embed ${r.embedCount}× ${r.embedMs} ms · '
               '${_matcher.angles.length} angles in catalog · frame turned ${CameraFeed.lastRotation}°',
-              style: Theme.of(context).textTheme.bodySmall,
+              style: const TextStyle(fontSize: 12),
             ),
           ),
         if (isDev)

@@ -96,7 +96,6 @@ class _EmbedLabViewState extends State<EmbedLabView> {
     final v = i >= 0 ? r!.vectors[i] : null;
     final ranking = v == null ? const <({String name, double score})>[] : _matcher.ranking(v);
     final pinned = _pinned;
-    final t = Theme.of(context).textTheme;
 
     return CameraLayout(
       camera: CameraFeed(
@@ -134,7 +133,7 @@ class _EmbedLabViewState extends State<EmbedLabView> {
                     ? 'Point at one object…'
                     : '${v.length}-d fingerprint · ${r!.embedMs} ms · catalog has ${_matcher.angles.length} angles '
                           'for this embedder',
-                style: t.bodySmall,
+                style: const TextStyle(fontSize: 12),
               ),
               if (pinned != null)
                 Row(
@@ -147,7 +146,7 @@ class _EmbedLabViewState extends State<EmbedLabView> {
                     Expanded(
                       child: Text(
                         v == null ? 'vs pinned: —' : 'vs pinned: ${dot(v, pinned.vector).toStringAsFixed(3)}',
-                        style: t.titleLarge,
+                        style: const TextStyle(fontSize: 22),
                       ),
                     ),
                     TextButton(onPressed: () => setState(() => _pinned = null), child: const Text('Unpin')),
