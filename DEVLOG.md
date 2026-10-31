@@ -109,6 +109,29 @@ every angle now has 8 fingerprints. Smoothing sliders not yet tuned on the phone
 keep 2, vote 4, count hold 5, merge 0.6, link 0.3, glide 0.5. Note: for old angles "further away" is synthetic
 (edge pixels repeated), since the stored crop has no real surroundings.
 
+## 8. Shop app: Ginlo design, billing flow with UPI QR, Home dashboard — `e8161d4` … `02f1216`
+**Goal:** the complete prod flow in the Ginlo look: photo → bill → more photos or Done → customer scans our QR
+with the amount → paid; plus the earnings dashboard from the mock-ups.
+- `lib/ui/theme.dart`: colours measured from the logo (blue `#0035F5`, coin yellow `#FECE28`), lavender page,
+  white 20 px cards (`GinloCard`), logo header (`GinloHeader`). `assets/brand/ginlo_logo.png`: logo, background
+  made transparent. `lib/ui/format.dart`: `inr()` with Indian grouping (₹12,48,000.00), `pct()`, `clock()`.
+- `lib/data/sales.dart`: `BillLine`, `Sale`, `Period`, `SalesStats.compute()` (total, % vs previous period, bills,
+  average bill, chart buckets, top item, units per item, money per payment method, recent).
+- `lib/data/db.dart` v2: `sales.payment` (migration for existing installs), `recordSale()` (also lowers stock),
+  `sales()`, `shop()` / `setShop()`, `productPhoto()`.
+- `lib/data/bill_draft.dart`: the bill being built, app-wide (survives "Add more photos").
+- `lib/data/upi.dart`: `upiUri()` → `upi://pay?pa=…&pn=…&am=…&cu=INR&tn=…`; any UPI app opens with the amount filled.
+- Screens: Bill gets **Add to bill** (freezes the steady items in view) + a bill bar; `invoice_screen.dart`
+  (− / +, total, **Add more photos** / **Done**); `payment_screen.dart` (big QR + amount, **Paid via UPI** /
+  **Paid in cash** → saved, back to the camera); `shop_dialog.dart` (store name + UPI ID);
+  `home_screen.dart` (store card, Total Sales + Select Period sheet + chart, Top Performing Item with the
+  product's own photo, Sales Breakdown donut, Recent Sales). Catalog tab renamed **Products**.
+- Tests: `sales_test.dart`, `upi_test.dart`, `format_test.dart` — 21 tests total.
+
+**How it went:** analyze clean, all tests pass, dev + prod APKs build. **Not yet checked on the phone** — it dropped
+off wireless debugging while this was built. To check: set the UPI ID (Home → Edit), Add to bill → Done → scan
+the QR with another phone (₹1 test), Paid → Home updates.
+
 ---
 
 ## Backlog (planned, not built)

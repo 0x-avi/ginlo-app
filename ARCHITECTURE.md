@@ -10,7 +10,10 @@ lib/
   main.dart                 app start, theme, tab shell
   config.dart               isDev: dev app vs prod app
   data/
-    db.dart                 SQLite: products, taught angles, sales, settings
+    db.dart                 SQLite: products, taught angles, sales, settings, shop name + UPI ID
+    sales.dart              bill lines, sales, dashboard stats per period (pure Dart)
+    bill_draft.dart         the bill being built (survives "Add more photos")
+    upi.dart                the upi://pay link inside the payment QR
   ml/                       the "AI" part: no UI in here
     frame.dart              one camera frame + reading its pixels upright
     detector.dart           YOLO: frame -> boxes
@@ -19,15 +22,21 @@ lib/
     matcher.dart            fingerprint -> closest taught product (or Unknown)
     smoother.dart           steadies results across frames for the shop app
     models.dart             loads each model once
+  ui/
+    theme.dart              Ginlo colours, theme, GinloCard, GinloHeader
+    format.dart             ₹ with Indian grouping, %, time
   widgets/                  reusable UI pieces
     camera_feed.dart        camera preview + frames, rotation, app lifecycle
     camera_layout.dart      camera + controls, portrait and landscape
     tag_painter.dart        draws boxes with labels
   screens/                  one file per screen
-    bill_screen.dart        live billing (opens first)
+    bill_screen.dart        live billing (opens first): Add to bill
+    invoice_screen.dart     the bill: − / +, Add more photos, Done
+    payment_screen.dart     QR with the amount for the customer; Paid via UPI / cash
+    shop_dialog.dart        edit store name + UPI ID
     catalog_screen.dart     products, angle gallery, upgrade old angles
     learn_screen.dart       teach a product its angles
-    home_screen.dart        earnings dashboard (placeholder for now)
+    home_screen.dart        earnings dashboard (store, total sales + chart, top item, breakdown, recent)
     lab_screen.dart         dev only: detector/embedder test benches
     live_detect_view.dart   dev only: raw detector view (Lab -> Detect)
     logs_screen.dart        dev only: timings per model (Lab -> Logs)
@@ -102,6 +111,13 @@ Read top to bottom; each file only uses things from files above it.
     🗑), `_UpgradeAnglesButton`.
 17. Dev only, skim: `lab_screen.dart`, `live_detect_view.dart`, `logs_screen.dart`, `dev/perf_log.dart`.
 
-### 6. Tests and tools
+### 6. Shop flow (read after Bill)
+18a. **`lib/ui/theme.dart`**, **`format.dart`**: colours and reusable card/header; rupee formatting.
+18b. **`lib/data/sales.dart`**: `SalesStats.compute()` turns a list of sales into everything Home shows.
+18c. **`lib/data/bill_draft.dart`** → **`invoice_screen.dart`** → **`upi.dart`** → **`payment_screen.dart`**: follow
+     one bill from "Add to bill" (in `bill_screen.dart`) to "Paid" (`AppDb.recordSale`).
+18d. **`lib/screens/home_screen.dart`**: `_load()` reads the period's sales and the previous period's, then each card.
+
+### 7. Tests and tools
 18. **`test/smoother_test.dart`**: readable examples of what the smoother guarantees.
 19. **`tools/inline_buffers.py`**: why newly exported models need rewriting before the phone can run them.
