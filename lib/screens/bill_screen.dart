@@ -27,7 +27,8 @@ class BillScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('New bill')),
+      // No title bar in landscape: the camera needs the height.
+      appBar: _portrait(context) ? AppBar(title: const Text('New bill')) : null,
       body: active ? const _LiveBill() : const SizedBox.shrink(),
     );
   }
@@ -146,7 +147,7 @@ class _LiveBillState extends State<_LiveBill> {
             padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
             child: Text(
               'detect ${r.preMs + r.inferMs + r.postMs} ms · embed ${r.embedCount}× ${r.embedMs} ms · '
-              '${_matcher.angles.length} angles in catalog',
+              '${_matcher.angles.length} angles in catalog · frame turned ${CameraFeed.lastRotation}°',
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
@@ -169,4 +170,9 @@ class _LiveBillState extends State<_LiveBill> {
       ],
     );
   }
+}
+
+bool _portrait(BuildContext context) {
+  final s = MediaQuery.sizeOf(context);
+  return s.height >= s.width;
 }

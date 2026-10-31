@@ -52,13 +52,24 @@ class Embedder {
 }
 
 /// Crop the box out of the frame, stretch it to 224x224, values 0..1 (NHWC).
-void prepareEmbedderInput(FrameData f, Rect box, Float32List out, {double pad = 0.05}) {
+/// [turns] rotates the crop by that many quarter turns clockwise (for teaching every orientation).
+void prepareEmbedderInput(FrameData f, Rect box, Float32List out, {double pad = 0.05, int turns = 0}) {
   const s = Embedder.size;
   final c = _cropRect(f, box, pad);
   for (var oy = 0; oy < s; oy++) {
-    final uy = c.y0 + math.min<int>(c.h - 1, (oy * c.h / s).floor());
     for (var ox = 0; ox < s; ox++) {
-      final px = f.rgb(c.x0 + math.min<int>(c.w - 1, (ox * c.w / s).floor()), uy);
+      // output pixel -> position in the (unturned) crop, both as 0..1
+      final nx = (ox + 0.5) / s, ny = (oy + 0.5) / s;
+      final (cx, cy) = switch (turns % 4) {
+        1 => (ny, 1 - nx),
+        2 => (1 - nx, 1 - ny),
+        3 => (1 - ny, nx),
+        _ => (nx, ny),
+      };
+      final px = f.rgb(
+        c.x0 + math.min<int>(c.w - 1, (cx * c.w).floor()),
+        c.y0 + math.min<int>(c.h - 1, (cy * c.h).floor()),
+      );
       final i = (oy * s + ox) * 3;
       out[i] = (px >> 16) / 255;
       out[i + 1] = ((px >> 8) & 0xFF) / 255;

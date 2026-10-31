@@ -29,7 +29,7 @@ class LearnScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Learn products')),
+      appBar: _portrait(context) ? AppBar(title: const Text('Learn products')) : null,
       body: active ? const LearnView() : const SizedBox.shrink(),
     );
   }
@@ -49,7 +49,9 @@ class _LearnViewState extends State<LearnView> {
   List<Product> _products = [];
   int? _productId;
   VisionResult? _last;
-  final _captures = <({Float32List vector, Uint8List crop})>[];
+
+  /// Each capture: its fingerprint upright + turned 90/180/270° (so any orientation matches), and the crop.
+  final _captures = <({List<Float32List> vectors, Uint8List crop})>[];
   bool _saving = false;
 
   @override
@@ -68,7 +70,15 @@ class _LearnViewState extends State<LearnView> {
     final det = await Models.detector(_detSpec), emb = await Models.embedder(_embSpec);
     final wall = Stopwatch()..start();
     // Fingerprint only the biggest box (the product you're holding up), and keep its crop.
-    final r = await Vision.analyze(det, frame, embedder: emb, conf: 0.2, pick: EmbedPick.largest, wantCrops: true);
+    final r = await Vision.analyze(
+      det,
+      frame,
+      embedder: emb,
+      conf: 0.2,
+      pick: EmbedPick.largest,
+      wantCrops: true,
+      allTurns: true,
+    );
     PerfLog.instance.record('Learn: ${_detSpec.title} + ${_embSpec.title}', r, wall.elapsedMilliseconds);
     if (mounted) setState(() => _last = r);
   }
@@ -80,7 +90,7 @@ class _LearnViewState extends State<LearnView> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No product in view yet')));
       return;
     }
-    setState(() => _captures.add((vector: r.vectors[i]!, crop: r.crops[i]!)));
+    setState(() => _captures.add((vectors: [r.vectors[i]!, ...?r.turned[i]], crop: r.crops[i]!)));
   }
 
   Future<void> _save() async {
@@ -89,7 +99,9 @@ class _LearnViewState extends State<LearnView> {
     setState(() => _saving = true);
     final db = await AppDb.open();
     for (final c in _captures) {
-      await db.addAngle(id, _embSpec.id, c.vector, c.crop);
+      for (final v in c.vectors) {
+        await db.addAngle(id, _embSpec.id, v, c.crop); // same crop: shown and deleted as one angle
+      }
     }
     if (!mounted) return;
     final name = _products.firstWhere((p) => p.id == id).name;
@@ -208,4 +220,9 @@ class _LearnViewState extends State<LearnView> {
       ),
     );
   }
+}
+
+bool _portrait(BuildContext context) {
+  final s = MediaQuery.sizeOf(context);
+  return s.height >= s.width;
 }

@@ -97,7 +97,8 @@ class AppDb {
   /// Number of taught angles per product id, for one embedder.
   Future<Map<int, int>> angleCounts(String model) async => {
     for (final r in await db.rawQuery(
-      'SELECT product_id, COUNT(*) AS n FROM embeddings WHERE model = ? GROUP BY product_id',
+      // one capture = one crop, saved with 4 rotated fingerprints: count crops, not rows
+      'SELECT product_id, COUNT(DISTINCT crop) AS n FROM embeddings WHERE model = ? GROUP BY product_id',
       [model],
     ))
       r['product_id'] as int: r['n'] as int,
@@ -137,17 +138,16 @@ class AppDb {
   }
 
   /// One product's taught angles (id + crop image) for the gallery where you remove bad ones.
+  /// One row per capture (its 4 rotated fingerprints share the crop, so group by crop).
   Future<List<({int id, Uint8List? crop})>> productAngles(int productId, String model) async => [
-    for (final r in await db.query(
-      'embeddings',
-      columns: ['id', 'crop'],
-      where: 'product_id = ? AND model = ?',
-      whereArgs: [productId, model],
+    for (final r in await db.rawQuery(
+      'SELECT MIN(id) AS id, crop FROM embeddings WHERE product_id = ? AND model = ? GROUP BY crop ORDER BY id',
+      [productId, model],
     ))
       (id: r['id'] as int, crop: r['crop'] as Uint8List?),
   ];
 
-  /// Removes a taught angle (and the same crop's fingerprints for the other embedder).
+  /// Removes a taught angle: every fingerprint with the same crop (its rotations, other embedders).
   Future<void> deleteAngle(int id) async {
     await db.rawDelete(
       'DELETE FROM embeddings WHERE id = ? OR (crop IS NOT NULL AND crop = (SELECT crop FROM embeddings WHERE id = ?))',

@@ -21,12 +21,16 @@ class VisionResult {
   /// Same order as [detections]; null where that box wasn't embedded.
   final List<Float32List?> vectors;
   final List<Uint8List?> crops;
+
+  /// With allTurns: the same box fingerprinted turned 90°, 180° and 270° (teaching).
+  final List<List<Float32List>?> turned;
   final int preMs, inferMs, postMs, embedMs, embedCount;
 
   const VisionResult(
     this.detections,
     this.vectors,
     this.crops,
+    this.turned,
     this.preMs,
     this.inferMs,
     this.postMs,
@@ -63,6 +67,7 @@ class Vision {
     EmbedPick pick = EmbedPick.none,
     int maxEmbeds = 12,
     bool wantCrops = false,
+    bool allTurns = false,
   }) {
     final job = _Job(
       detector.interpreter.address,
@@ -74,6 +79,7 @@ class Vision {
       embedder == null ? EmbedPick.none : pick,
       maxEmbeds,
       wantCrops,
+      allTurns,
     );
     final run = _tail.then((_) => _spawn(job));
     _tail = run.then((_) {}, onError: (_) {});
@@ -94,6 +100,7 @@ class _Job {
   final EmbedPick pick;
   final int maxEmbeds;
   final bool wantCrops;
+  final bool allTurns;
   _Job(
     this.detAddress,
     this.spec,
@@ -104,6 +111,7 @@ class _Job {
     this.pick,
     this.maxEmbeds,
     this.wantCrops,
+    this.allTurns,
   );
 }
 
@@ -128,6 +136,7 @@ VisionResult _run(_Job job) {
 
   final vectors = List<Float32List?>.filled(dets.length, null);
   final crops = List<Uint8List?>.filled(dets.length, null);
+  final turned = List<List<Float32List>?>.filled(dets.length, null);
   final picked = <int>[];
   if (job.pick == EmbedPick.all) {
     picked.addAll(List.generate(dets.length, (i) => i).take(job.maxEmbeds)); // dets are sorted by score
@@ -141,15 +150,20 @@ VisionResult _run(_Job job) {
   if (picked.isNotEmpty) {
     final emb = Interpreter.fromAddress(job.embAddress!, allocated: true);
     final crop = Float32List(Embedder.size * Embedder.size * 3);
-    for (final i in picked) {
-      prepareEmbedderInput(job.frame, dets[i].box, crop);
+    Float32List embed(int i, int turns) {
+      prepareEmbedderInput(job.frame, dets[i].box, crop, turns: turns);
       emb.getInputTensor(0).data = crop.buffer.asUint8List();
       emb.invoke();
       final o = emb.getOutputTensor(0).data;
-      vectors[i] = l2normalize(o.buffer.asFloat32List(o.offsetInBytes, o.lengthInBytes ~/ 4));
+      return l2normalize(o.buffer.asFloat32List(o.offsetInBytes, o.lengthInBytes ~/ 4));
+    }
+
+    for (final i in picked) {
+      vectors[i] = embed(i, 0);
+      if (job.allTurns) turned[i] = [embed(i, 1), embed(i, 2), embed(i, 3)];
       if (job.wantCrops) crops[i] = cropJpeg(job.frame, dets[i].box);
     }
   }
   final embedMs = sw.elapsedMilliseconds - preMs - inferMs - postMs;
-  return VisionResult(dets, vectors, crops, preMs, inferMs, postMs, embedMs, picked.length);
+  return VisionResult(dets, vectors, crops, turned, preMs, inferMs, postMs, embedMs, picked.length);
 }

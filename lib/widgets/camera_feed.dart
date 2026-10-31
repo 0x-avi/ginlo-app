@@ -14,6 +14,9 @@ class CameraFeed extends StatefulWidget {
   final Future<void> Function(FrameData frame) onFrame;
   final Widget? overlay;
 
+  /// Rotation applied to the latest frame (dev status lines show it).
+  static int lastRotation = 0;
+
   @override
   State<CameraFeed> createState() => _CameraFeedState();
 }
@@ -54,22 +57,32 @@ class _CameraFeedState extends State<CameraFeed> with WidgetsBindingObserver {
     }
   }
 
-  /// Clockwise degrees to turn a sensor frame so it matches what the user sees, however the
-  /// phone is held. The sensor is mounted at a fixed angle (usually 90°); the phone's own turn
-  /// is subtracted (same formula as Google's ML Kit samples, back camera).
-  static int _uprightRotation(CameraDescription camera, DeviceOrientation phone) {
-    const phoneDegrees = {
-      DeviceOrientation.portraitUp: 0,
-      DeviceOrientation.landscapeLeft: 90,
-      DeviceOrientation.portraitDown: 180,
-      DeviceOrientation.landscapeRight: 270,
+  /// Clockwise degrees to turn a sensor frame so it matches what's on screen, however the phone
+  /// is held. The sensor is mounted at a fixed angle (usually 90°, right for portrait); in
+  /// landscape the screen has turned a quarter, so the frame needs a quarter turn more or less.
+  ///
+  /// Flutter's landscapeLeft/Right are named the opposite way round to Android's ROTATION_90/270,
+  /// so the ML Kit table (landscapeLeft = 90) turned frames 180° the wrong way: boxes moved
+  /// opposite to the object. Here landscapeLeft = 270.
+  int _uprightRotation(CameraDescription camera, DeviceOrientation phone) {
+    // The screen only turns when auto-rotate lets it: follow the screen, not the raw sensor.
+    final screenLandscape = _screenLandscape;
+    final turn = switch (phone) {
+      DeviceOrientation.landscapeLeft when screenLandscape => 270,
+      DeviceOrientation.landscapeRight when screenLandscape => 90,
+      _ when screenLandscape => 270,
+      _ => 0, // screen is portrait (rotation locked, or held upright)
     };
-    return (camera.sensorOrientation - phoneDegrees[phone]! + 360) % 360;
+    return (camera.sensorOrientation - turn + 360) % 360;
   }
+
+  /// Updated on every build from the screen's actual shape.
+  bool _screenLandscape = false;
 
   void _onImage(CameraImage img, int rotation) {
     if (_busy || !mounted) return; // still working on the previous frame
     _busy = true;
+    CameraFeed.lastRotation = rotation;
     widget
         .onFrame(FrameData(img, rotation))
         .catchError((Object e) {
@@ -102,6 +115,8 @@ class _CameraFeedState extends State<CameraFeed> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final screen = MediaQuery.sizeOf(context);
+    _screenLandscape = screen.width > screen.height;
     final cam = _camera;
     if (cam == null) {
       return Center(
@@ -110,7 +125,27 @@ class _CameraFeedState extends State<CameraFeed> with WidgetsBindingObserver {
             : const CircularProgressIndicator(),
       );
     }
-    // CameraPreview sizes itself to the camera's aspect ratio; the child is drawn exactly on top.
-    return Center(child: CameraPreview(cam, child: widget.overlay));
+    // Size the preview ourselves from the screen's shape (wide in landscape, tall in portrait),
+    // as large as fits. The overlay (boxes) is drawn exactly on top, at the same size.
+    return LayoutBuilder(
+      builder: (context, box) {
+        final s = cam.value.previewSize;
+        final long = s == null ? 16.0 : (s.width > s.height ? s.width : s.height);
+        final short = s == null ? 9.0 : (s.width > s.height ? s.height : s.width);
+        final aspect = _screenLandscape ? long / short : short / long;
+        var w = box.maxWidth, h = w / aspect;
+        if (h > box.maxHeight) {
+          h = box.maxHeight;
+          w = h * aspect;
+        }
+        return Center(
+          child: SizedBox(
+            width: w,
+            height: h,
+            child: CameraPreview(cam, child: widget.overlay),
+          ),
+        );
+      },
+    );
   }
 }
