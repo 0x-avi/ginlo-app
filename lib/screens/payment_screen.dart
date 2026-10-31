@@ -3,8 +3,10 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 import '../data/bill_draft.dart';
 import '../data/db.dart';
+import '../data/sales.dart';
 import '../data/upi.dart';
 import '../ui/theme.dart';
+import 'receipt_screen.dart';
 import 'shop_dialog.dart';
 
 /// Turn the phone to the customer: a big UPI QR with the bill amount already in it.
@@ -34,13 +36,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
   Future<void> _paid(String payment) async {
     final draft = BillDraft.instance;
     setState(() => _saving = true);
-    final total = draft.total;
-    await (await AppDb.open()).recordSale(List.of(draft.lines), total, payment);
+    final lines = List.of(draft.lines), total = draft.total;
+    final id = await (await AppDb.open()).recordSale(lines, total, payment);
     draft.clear();
     if (!mounted) return;
-    Navigator.popUntil(context, (r) => r.isFirst); // back to the camera for the next customer
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('₹${total.toStringAsFixed(2)} saved ($payment)')));
+    // Replace the bill screens with the final invoice; "New bill" there goes back to the camera.
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => ReceiptScreen(sale: Sale(id, DateTime.now(), total, payment, lines))),
+      (r) => r.isFirst,
+    );
   }
 
   @override
