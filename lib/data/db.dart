@@ -51,7 +51,7 @@ class AppDb {
     final path = p.join(await getDatabasesPath(), 'ginlo.db');
     final db = await openDatabase(
       path,
-      version: 2, // 2: sales.payment
+      version: 3, // 2: sales.payment  3: embeddings.capture + variant
       onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
       onCreate: (db, version) async {
         await db.execute('''
@@ -62,7 +62,8 @@ class AppDb {
           CREATE TABLE embeddings(
             id INTEGER PRIMARY KEY,
             product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-            model TEXT NOT NULL, vector BLOB NOT NULL, crop BLOB)''');
+            model TEXT NOT NULL, vector BLOB NOT NULL, crop BLOB,
+            capture TEXT, variant TEXT)''');
         await db.execute('''
           CREATE TABLE sales(
             id INTEGER PRIMARY KEY, ts TEXT NOT NULL, total REAL NOT NULL, items_json TEXT NOT NULL,
@@ -72,6 +73,16 @@ class AppDb {
       // Databases made by an older version of the app get the new columns added in place.
       onUpgrade: (db, from, to) async {
         if (from < 2) await db.execute("ALTER TABLE sales ADD COLUMN payment TEXT NOT NULL DEFAULT 'UPI'");
+        if (from < 3) {
+          // Group old rows into captures by their shared crop picture; mark them 'legacy' (their
+          // fingerprints may come from the small stored picture, so re-teaching is better).
+          await db.execute('ALTER TABLE embeddings ADD COLUMN capture TEXT');
+          await db.execute('ALTER TABLE embeddings ADD COLUMN variant TEXT');
+          await db.execute('''
+            UPDATE embeddings SET variant = 'legacy', capture = 'old-' || (
+              SELECT MIN(e2.id) FROM embeddings e2
+              WHERE e2.product_id = embeddings.product_id AND e2.crop IS embeddings.crop)''');
+        }
       },
     );
     return _instance = AppDb._(db);
@@ -100,30 +111,56 @@ class AppDb {
     _changed();
   }
 
-  /// Number of taught angles per product id, for one embedder.
+  /// Number of taught angles (captures) per product id, for one embedder.
   Future<Map<int, int>> angleCounts(String model) async => {
     for (final r in await db.rawQuery(
-      // one capture = one crop, saved with 4 rotated fingerprints: count crops, not rows
-      'SELECT product_id, COUNT(DISTINCT crop) AS n FROM embeddings WHERE model = ? GROUP BY product_id',
+      'SELECT product_id, COUNT(DISTINCT capture) AS n FROM embeddings WHERE model = ? GROUP BY product_id',
       [model],
     ))
       r['product_id'] as int: r['n'] as int,
   };
 
-  // ------------------------------------------------------------ embeddings (taught angles)
+  /// Products whose angles are all 'legacy' (taught before captures kept their full-quality
+  /// fingerprint): re-teaching them gives better recognition.
+  Future<Set<int>> productsNeedingReteach(String model) async => {
+    for (final r in await db.rawQuery(
+      "SELECT product_id FROM embeddings WHERE model = ? GROUP BY product_id "
+      "HAVING SUM(CASE WHEN variant IS NULL OR variant != 'legacy' THEN 1 ELSE 0 END) = 0",
+      [model],
+    ))
+      r['product_id'] as int,
+  };
 
-  /// Saves one taught angle: its fingerprint and the crop it came from.
-  Future<void> addAngle(int productId, String model, Float32List vector, Uint8List? crop) async {
-    await db.insert('embeddings', {
-      'product_id': productId,
-      'model': model,
-      'vector': vector.buffer.asUint8List(vector.offsetInBytes, vector.lengthInBytes),
-      'crop': crop,
+  // ------------------------------------------------------------ embeddings (taught angles)
+  //
+  // One Capture tap in Learn = one "capture": its fingerprints in every teach variant (one row each,
+  // sharing a `capture` id) and its crop picture, stored once on the first row.
+
+  /// Saves one capture: [vectors][i] is the fingerprint for teach variant [variants][i].
+  Future<void> addCapture(
+    int productId,
+    String model,
+    List<Float32List> vectors,
+    List<String> variants,
+    Uint8List crop,
+  ) async {
+    final capture = '${DateTime.now().microsecondsSinceEpoch}-$productId';
+    await db.transaction((tx) async {
+      for (var i = 0; i < vectors.length; i++) {
+        await tx.insert('embeddings', {
+          'product_id': productId,
+          'model': model,
+          'vector': vectors[i].buffer.asUint8List(vectors[i].offsetInBytes, vectors[i].lengthInBytes),
+          'crop': i == 0 ? crop : null,
+          'capture': capture,
+          'variant': variants[i],
+        });
+      }
     });
     _changed();
   }
 
-  /// Every taught angle for one embedder, with its product (what the Matcher searches).
+  /// Every taught fingerprint for one embedder, with its product (what the Matcher searches).
   Future<List<Angle>> angles(String model) async {
     final rows = await db.rawQuery(
       'SELECT e.id, e.product_id, e.vector, p.name, p.price FROM embeddings e '
@@ -143,11 +180,11 @@ class AppDb {
     ];
   }
 
-  /// One product's taught angles (id + crop image) for the gallery where you remove bad ones.
-  /// One row per capture (its 4 rotated fingerprints share the crop, so group by crop).
+  /// One row per capture (id + crop picture) for the gallery where you remove bad ones.
   Future<List<({int id, Uint8List? crop})>> productAngles(int productId, String model) async => [
     for (final r in await db.rawQuery(
-      'SELECT MIN(id) AS id, crop FROM embeddings WHERE product_id = ? AND model = ? GROUP BY crop ORDER BY id',
+      'SELECT MIN(id) AS id, MAX(crop) AS crop FROM embeddings WHERE product_id = ? AND model = ? '
+      'GROUP BY capture ORDER BY id',
       [productId, model],
     ))
       (id: r['id'] as int, crop: r['crop'] as Uint8List?),
@@ -163,40 +200,43 @@ class AppDb {
     return r.isEmpty ? null : r.first['crop'] as Uint8List;
   }
 
-  /// Removes a taught angle: every fingerprint with the same crop (its rotations, other embedders).
+  /// Removes a taught angle: every fingerprint of the capture that row belongs to.
   Future<void> deleteAngle(int id) async {
-    await db.rawDelete(
-      'DELETE FROM embeddings WHERE id = ? OR (crop IS NOT NULL AND crop = (SELECT crop FROM embeddings WHERE id = ?))',
-      [id, id],
-    );
+    await db.rawDelete('DELETE FROM embeddings WHERE capture = (SELECT capture FROM embeddings WHERE id = ?)', [id]);
     _changed();
   }
 
-  /// Taught angles (one per crop picture) that have fewer than [variants] fingerprints for this
-  /// embedder, i.e. taught before every capture was saved in all teach variants.
-  Future<List<({int productId, Uint8List crop})>> anglesNeedingVariants(String model, int variants) async => [
+  /// Captures with fewer than [variants] fingerprints for this embedder (taught before every
+  /// capture got all teach variants), with their crop picture.
+  Future<List<({int productId, String capture, Uint8List crop})>> anglesNeedingVariants(
+    String model,
+    int variants,
+  ) async => [
     for (final r in await db.rawQuery(
-      'SELECT product_id, crop FROM embeddings WHERE model = ? AND crop IS NOT NULL '
-      'GROUP BY product_id, crop HAVING COUNT(*) < ?',
+      'SELECT product_id, capture, MAX(crop) AS crop FROM embeddings WHERE model = ? '
+      'GROUP BY capture HAVING COUNT(*) < ? AND MAX(crop) IS NOT NULL',
       [model, variants],
     ))
-      (productId: r['product_id'] as int, crop: r['crop'] as Uint8List),
+      (productId: r['product_id'] as int, capture: r['capture'] as String, crop: r['crop'] as Uint8List),
   ];
 
-  /// Replaces one angle's fingerprints (for this embedder) with [vectors], keeping its crop picture.
-  Future<void> replaceAngleVectors(int productId, String model, Uint8List crop, List<Float32List> vectors) async {
+  /// Adds fingerprints to an existing capture. Never deletes: the capture's original fingerprint
+  /// (made from the full-quality camera frame) is better than any re-made from its stored picture.
+  Future<void> addVariants(
+    int productId,
+    String model,
+    String capture,
+    List<Float32List> vectors,
+    String variant,
+  ) async {
     await db.transaction((tx) async {
-      await tx.delete(
-        'embeddings',
-        where: 'product_id = ? AND model = ? AND crop = ?',
-        whereArgs: [productId, model, crop],
-      );
       for (final v in vectors) {
         await tx.insert('embeddings', {
           'product_id': productId,
           'model': model,
           'vector': v.buffer.asUint8List(v.offsetInBytes, v.lengthInBytes),
-          'crop': crop,
+          'capture': capture,
+          'variant': variant,
         });
       }
     });

@@ -120,10 +120,12 @@ void prepareEmbedderInput(Pixels f, Rect box, Float32List out, {double pad = 0.0
   }
 }
 
-/// The same crop as a small JPEG, saved with each taught angle so you can see (and delete) it.
-Uint8List cropJpeg(Pixels f, Rect box, {int size = 224, double pad = 0.05}) {
+/// The crop as a JPEG, saved with each capture: shown in the gallery, and re-fingerprinted when
+/// old angles are upgraded. Its *short* side is kept at 224 px (the model's input size): with only
+/// the long side capped at 224, a tall can was saved ~90 px wide and lost the detail needed later.
+Uint8List cropJpeg(Pixels f, Rect box, {double pad = 0.05}) {
   final c = _cropRect(f, box, pad);
-  final scale = size / math.max(c.w, c.h);
+  final scale = math.min(1.0, math.min(224 / math.min(c.w, c.h), 448 / math.max(c.w, c.h)));
   final w = math.max<int>(1, (c.w * scale).round()), h = math.max<int>(1, (c.h * scale).round());
   final im = img.Image(width: w, height: h);
   for (var oy = 0; oy < h; oy++) {
@@ -135,7 +137,7 @@ Uint8List cropJpeg(Pixels f, Rect box, {int size = 224, double pad = 0.05}) {
       im.setPixelRgb(ox, oy, px >> 16, (px >> 8) & 0xFF, px & 0xFF);
     }
   }
-  return img.encodeJpg(im, quality: 85);
+  return img.encodeJpg(im, quality: 92);
 }
 
 /// Scale a vector to length 1, so a dot product between two of them is their cosine similarity.

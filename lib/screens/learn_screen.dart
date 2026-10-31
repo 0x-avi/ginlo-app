@@ -107,9 +107,7 @@ class _LearnViewState extends State<LearnView> {
     setState(() => _saving = true);
     final db = await AppDb.open();
     for (final c in _captures) {
-      for (final v in c.vectors) {
-        await db.addAngle(id, _embSpec.id, v, c.crop); // same crop: shown and deleted as one angle
-      }
+      await db.addCapture(id, _embSpec.id, c.vectors, [for (final v in teachVariants) v.name], c.crop);
     }
     if (!mounted) return;
     final name = _products.firstWhere((p) => p.id == id).name;

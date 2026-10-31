@@ -30,7 +30,7 @@ class CatalogScreen extends StatelessWidget {
           builder: (context, snap) {
             if (snap.hasError) return Center(child: Text('Database: ${snap.error}'));
             if (!snap.hasData) return const Center(child: CircularProgressIndicator());
-            final (products, counts) = snap.data!;
+            final (products, counts, reteach) = snap.data!;
             if (products.isEmpty) {
               return const Center(child: Text('No products yet. Tap + Product, then teach it its angles.'));
             }
@@ -40,9 +40,13 @@ class CatalogScreen extends StatelessWidget {
                 for (final p in products)
                   ListTile(
                     title: Text(p.name),
-                    subtitle: Text('₹${p.price.toStringAsFixed(2)} · stock ${p.stock} · ${counts[p.id] ?? 0} angles'),
-                    trailing: (counts[p.id] ?? 0) < 4
-                        ? const Tooltip(message: 'Teach at least 4 angles', child: Icon(Icons.warning_amber))
+                    subtitle: Text(
+                      reteach.contains(p.id)
+                          ? '₹${p.price.toStringAsFixed(2)} · re-teach for better recognition'
+                          : '₹${p.price.toStringAsFixed(2)} · stock ${p.stock} · ${counts[p.id] ?? 0} angles',
+                    ),
+                    trailing: (counts[p.id] ?? 0) < 4 || reteach.contains(p.id)
+                        ? const Tooltip(message: 'Teach 6–8 angles in Learn', child: Icon(Icons.warning_amber))
                         : const Icon(Icons.chevron_right),
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProductScreen(product: p))),
                   ),
@@ -54,9 +58,9 @@ class CatalogScreen extends StatelessWidget {
     );
   }
 
-  Future<(List<Product>, Map<int, int>)> _load() async {
+  Future<(List<Product>, Map<int, int>, Set<int>)> _load() async {
     final db = await AppDb.open();
-    return (await db.products(), await db.angleCounts(_model));
+    return (await db.products(), await db.angleCounts(_model), await db.productsNeedingReteach(_model));
   }
 }
 
@@ -233,7 +237,8 @@ class _UpgradeAnglesButtonState extends State<_UpgradeAnglesButton> {
       final batch = todo.sublist(i, (i + 4).clamp(0, todo.length));
       final vectors = await Vision.embedStoredVariants(embedder, [for (final a in batch) a.crop]);
       for (var j = 0; j < batch.length; j++) {
-        await db.replaceAngleVectors(batch[j].productId, _model, batch[j].crop, vectors[j]);
+        // Skip "as seen": the capture's original (from the camera) stays; only the variants are added.
+        await db.addVariants(batch[j].productId, _model, batch[j].capture, vectors[j].sublist(1), 'from picture');
       }
       if (mounted) setState(() => _done = i + batch.length);
     }
