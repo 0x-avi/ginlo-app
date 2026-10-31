@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
 import '../ml/matcher.dart';
+import 'sales.dart';
 
 /// A product in the shop's catalog.
 class Product {
@@ -50,7 +51,7 @@ class AppDb {
     final path = p.join(await getDatabasesPath(), 'ginlo.db');
     final db = await openDatabase(
       path,
-      version: 1,
+      version: 2, // 2: sales.payment
       onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
       onCreate: (db, version) async {
         await db.execute('''
@@ -64,8 +65,13 @@ class AppDb {
             model TEXT NOT NULL, vector BLOB NOT NULL, crop BLOB)''');
         await db.execute('''
           CREATE TABLE sales(
-            id INTEGER PRIMARY KEY, ts TEXT NOT NULL, total REAL NOT NULL, items_json TEXT NOT NULL)''');
+            id INTEGER PRIMARY KEY, ts TEXT NOT NULL, total REAL NOT NULL, items_json TEXT NOT NULL,
+            payment TEXT NOT NULL DEFAULT 'UPI')''');
         await db.execute('CREATE TABLE settings(key TEXT PRIMARY KEY, value TEXT NOT NULL)');
+      },
+      // Databases made by an older version of the app get the new columns added in place.
+      onUpgrade: (db, from, to) async {
+        if (from < 2) await db.execute("ALTER TABLE sales ADD COLUMN payment TEXT NOT NULL DEFAULT 'UPI'");
       },
     );
     return _instance = AppDb._(db);
@@ -184,6 +190,54 @@ class AppDb {
         });
       }
     });
+    _changed();
+  }
+
+  // ------------------------------------------------------------ sales
+
+  /// Saves a paid bill and lowers each product's stock by what was sold.
+  Future<int> recordSale(List<BillLine> lines, double total, String payment) async {
+    final id = await db.transaction((tx) async {
+      final id = await tx.insert('sales', {
+        'ts': DateTime.now().toIso8601String(),
+        'total': total,
+        'items_json': Sale.linesToJson(lines),
+        'payment': payment,
+      });
+      for (final l in lines.where((l) => l.productId != null)) {
+        await tx.rawUpdate('UPDATE products SET stock = MAX(0, stock - ?) WHERE id = ?', [l.qty, l.productId]);
+      }
+      return id;
+    });
+    _changed();
+    return id;
+  }
+
+  /// Paid bills with from <= time < to.
+  Future<List<Sale>> sales(DateTime from, DateTime to) async => [
+    for (final r in await db.query(
+      'sales',
+      where: 'ts >= ? AND ts < ?',
+      whereArgs: [from.toIso8601String(), to.toIso8601String()],
+      orderBy: 'ts',
+    ))
+      Sale(
+        r['id'] as int,
+        DateTime.parse(r['ts'] as String),
+        (r['total'] as num).toDouble(),
+        r['payment'] as String,
+        Sale.linesFromJson(r['items_json'] as String),
+      ),
+  ];
+
+  // ------------------------------------------------------------ shop (name + UPI ID for the QR)
+
+  Future<({String name, String upiId})> shop() async =>
+      (name: await setting('shop_name') ?? 'My Store', upiId: await setting('upi_id') ?? '');
+
+  Future<void> setShop(String name, String upiId) async {
+    await setSetting('shop_name', name.trim());
+    await setSetting('upi_id', upiId.trim());
     _changed();
   }
 
