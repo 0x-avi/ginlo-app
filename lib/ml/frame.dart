@@ -12,14 +12,14 @@ class FrameData {
   final int rotation;
 
   FrameData(CameraImage img, this.rotation)
-      : y = img.planes[0].bytes,
-        u = img.planes[1].bytes,
-        v = img.planes[2].bytes,
-        width = img.width,
-        height = img.height,
-        yRowStride = img.planes[0].bytesPerRow,
-        uvRowStride = img.planes[1].bytesPerRow,
-        uvPixelStride = img.planes[1].bytesPerPixel ?? 1;
+    : y = img.planes[0].bytes,
+      u = img.planes[1].bytes,
+      v = img.planes[2].bytes,
+      width = img.width,
+      height = img.height,
+      yRowStride = img.planes[0].bytesPerRow,
+      uvRowStride = img.planes[1].bytesPerRow,
+      uvPixelStride = img.planes[1].bytesPerPixel ?? 1;
 
   bool get _turned => rotation == 90 || rotation == 270;
 

@@ -11,6 +11,7 @@ import '../ml/matcher.dart';
 import '../ml/models.dart';
 import '../ml/vision.dart';
 import '../widgets/camera_feed.dart';
+import '../widgets/camera_layout.dart';
 import '../widgets/tag_painter.dart';
 import 'live_detect_view.dart';
 import 'logs_screen.dart';
@@ -27,7 +28,13 @@ class LabScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Lab'),
-          bottom: const TabBar(tabs: [Tab(text: 'Detect'), Tab(text: 'Embed'), Tab(text: 'Logs')]),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Detect'),
+              Tab(text: 'Embed'),
+              Tab(text: 'Logs'),
+            ],
+          ),
         ),
         // TabBarView only builds the visible page, so only one camera runs at a time.
         body: active
@@ -90,16 +97,16 @@ class _EmbedLabViewState extends State<EmbedLabView> {
     final pinned = _pinned;
     final t = Theme.of(context).textTheme;
 
-    return Column(
-      children: [
-        Expanded(
-          child: CameraFeed(
-            onFrame: _onFrame,
-            overlay: CustomPaint(
-              painter: TagPainter([if (i >= 0) BoxTag(r!.detections[i].box, 'embedding this', Colors.cyanAccent, strokeWidth: 4)]),
-            ),
-          ),
+    return CameraLayout(
+      camera: CameraFeed(
+        onFrame: _onFrame,
+        overlay: CustomPaint(
+          painter: TagPainter([
+            if (i >= 0) BoxTag(r!.detections[i].box, 'embedding this', Colors.cyanAccent, strokeWidth: 4),
+          ]),
         ),
+      ),
+      panel: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: DropdownButton<EmbedderSpec>(
@@ -125,27 +132,34 @@ class _EmbedLabViewState extends State<EmbedLabView> {
                 v == null
                     ? 'Point at one object…'
                     : '${v.length}-d fingerprint · ${r!.embedMs} ms · catalog has ${_matcher.angles.length} angles '
-                        'for this embedder',
+                          'for this embedder',
                 style: t.bodySmall,
               ),
               if (pinned != null)
-                Row(children: [
-                  ClipRRect(
+                Row(
+                  children: [
+                    ClipRRect(
                       borderRadius: BorderRadius.circular(4),
-                      child: Image.memory(pinned.crop, width: 40, height: 40, fit: BoxFit.cover)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(v == null ? 'vs pinned: —' : 'vs pinned: ${dot(v, pinned.vector).toStringAsFixed(3)}',
-                        style: t.titleLarge),
-                  ),
-                  TextButton(onPressed: () => setState(() => _pinned = null), child: const Text('Unpin')),
-                ]),
+                      child: Image.memory(pinned.crop, width: 40, height: 40, fit: BoxFit.cover),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        v == null ? 'vs pinned: —' : 'vs pinned: ${dot(v, pinned.vector).toStringAsFixed(3)}',
+                        style: t.titleLarge,
+                      ),
+                    ),
+                    TextButton(onPressed: () => setState(() => _pinned = null), child: const Text('Unpin')),
+                  ],
+                ),
               for (final m in ranking)
-                Row(children: [
-                  SizedBox(width: 110, child: Text(m.name, overflow: TextOverflow.ellipsis)),
-                  Expanded(child: LinearProgressIndicator(value: m.score.clamp(0.0, 1.0))),
-                  SizedBox(width: 48, child: Text(' ${m.score.toStringAsFixed(2)}')),
-                ]),
+                Row(
+                  children: [
+                    SizedBox(width: 110, child: Text(m.name, overflow: TextOverflow.ellipsis)),
+                    Expanded(child: LinearProgressIndicator(value: m.score.clamp(0.0, 1.0))),
+                    SizedBox(width: 48, child: Text(' ${m.score.toStringAsFixed(2)}')),
+                  ],
+                ),
             ],
           ),
         ),

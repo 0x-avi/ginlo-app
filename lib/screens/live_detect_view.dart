@@ -7,6 +7,7 @@ import '../ml/models.dart';
 import '../ml/vision.dart';
 import '../widgets/tag_painter.dart';
 import '../widgets/camera_feed.dart';
+import '../widgets/camera_layout.dart';
 
 /// Dev Lab: live camera with every detector box, its class and confidence drawn on top.
 class LiveDetectView extends StatefulWidget {
@@ -51,18 +52,21 @@ class _LiveDetectViewState extends State<LiveDetectView> {
       for (final d in r?.detections ?? const <Detection>[])
         BoxTag(d.box, '${d.label} ${d.score.toStringAsFixed(2)}', TagPainter.scoreColor(d.score)),
     ];
-    return Column(
-      children: [
-        Expanded(child: CameraFeed(onFrame: _onFrame, overlay: CustomPaint(painter: TagPainter(tags)))),
+    return CameraLayout(
+      camera: CameraFeed(
+        onFrame: _onFrame,
+        overlay: CustomPaint(painter: TagPainter(tags)),
+      ),
+      panel: [
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
           child: Text(
             _error != null
                 ? '${_spec.title}: $_error'
                 : r == null
-                    ? 'Loading ${_spec.title}…'
-                    : '${r.detections.length} boxes · ${(_frameTimes.length / 2).toStringAsFixed(1)} fps · '
-                        'prep ${r.preMs} + model ${r.inferMs} + boxes ${r.postMs} ms',
+                ? 'Loading ${_spec.title}…'
+                : '${r.detections.length} boxes · ${(_frameTimes.length / 2).toStringAsFixed(1)} fps · '
+                      'prep ${r.preMs} + model ${r.inferMs} + boxes ${r.postMs} ms',
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ),

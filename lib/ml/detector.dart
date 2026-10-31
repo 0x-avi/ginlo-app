@@ -122,7 +122,13 @@ Letterbox prepareDetectorInput(FrameData f, Float32List out, bool channelsFirst)
 /// Output layout: row r of `raw` holds value r for all 8400 candidate boxes:
 /// rows 0-3 = centre x, centre y, width, height; then one row of scores per class.
 List<Detection> decodeDetections(
-    Float32List raw, int n, DetectorSpec spec, List<String> labels, double conf, Letterbox lb) {
+  Float32List raw,
+  int n,
+  DetectorSpec spec,
+  List<String> labels,
+  double conf,
+  Letterbox lb,
+) {
   final nc = labels.length;
   final unit = spec.normalizedBoxes ? Detector.size.toDouble() : 1.0;
   final cand = <Detection>[];
@@ -140,8 +146,9 @@ List<Detection> decodeDetections(
     // 640-input pixels -> 0..1 of the upright frame (undo the letterbox)
     double fx(double x) => ((x - lb.padX) / lb.scale / lb.uprightW).clamp(0.0, 1.0);
     double fy(double y) => ((y - lb.padY) / lb.scale / lb.uprightH).clamp(0.0, 1.0);
-    cand.add(Detection(
-        Rect.fromLTRB(fx(cx - w / 2), fy(cy - h / 2), fx(cx + w / 2), fy(cy + h / 2)), best, labels[cls]));
+    cand.add(
+      Detection(Rect.fromLTRB(fx(cx - w / 2), fy(cy - h / 2), fx(cx + w / 2), fy(cy + h / 2)), best, labels[cls]),
+    );
   }
   return _nms(cand);
 }

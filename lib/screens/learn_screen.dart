@@ -11,6 +11,7 @@ import '../ml/frame.dart';
 import '../ml/models.dart';
 import '../ml/vision.dart';
 import '../widgets/camera_feed.dart';
+import '../widgets/camera_layout.dart';
 import '../widgets/tag_painter.dart';
 import 'catalog_screen.dart';
 
@@ -67,8 +68,7 @@ class _LearnViewState extends State<LearnView> {
     final det = await Models.detector(_detSpec), emb = await Models.embedder(_embSpec);
     final wall = Stopwatch()..start();
     // Fingerprint only the biggest box (the product you're holding up), and keep its crop.
-    final r = await Vision.analyze(det, frame,
-        embedder: emb, conf: 0.2, pick: EmbedPick.largest, wantCrops: true);
+    final r = await Vision.analyze(det, frame, embedder: emb, conf: 0.2, pick: EmbedPick.largest, wantCrops: true);
     PerfLog.instance.record('Learn: ${_detSpec.title} + ${_embSpec.title}', r, wall.elapsedMilliseconds);
     if (mounted) setState(() => _last = r);
   }
@@ -93,8 +93,7 @@ class _LearnViewState extends State<LearnView> {
     }
     if (!mounted) return;
     final name = _products.firstWhere((p) => p.id == id).name;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('Saved ${_captures.length} angles of $name')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Saved ${_captures.length} angles of $name')));
     setState(() {
       _captures.clear();
       _saving = false;
@@ -109,14 +108,22 @@ class _LearnViewState extends State<LearnView> {
       if (r != null)
         for (var i = 0; i < r.detections.length; i++)
           i == big
-              ? BoxTag(r.detections[i].box, isDev ? 'this one ${r.detections[i].score.toStringAsFixed(2)}' : 'this one',
-                  Colors.greenAccent, strokeWidth: 4)
+              ? BoxTag(
+                  r.detections[i].box,
+                  isDev ? 'this one ${r.detections[i].score.toStringAsFixed(2)}' : 'this one',
+                  Colors.greenAccent,
+                  strokeWidth: 4,
+                )
               : BoxTag(r.detections[i].box, '', Colors.white54, strokeWidth: 1.5),
     ];
 
     return SafeArea(
-      child: Column(
-        children: [
+      child: CameraLayout(
+        camera: CameraFeed(
+          onFrame: _onFrame,
+          overlay: CustomPaint(painter: TagPainter(tags)),
+        ),
+        panel: [
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
             child: Row(
@@ -143,7 +150,6 @@ class _LearnViewState extends State<LearnView> {
               ],
             ),
           ),
-          Expanded(child: CameraFeed(onFrame: _onFrame, overlay: CustomPaint(painter: TagPainter(tags)))),
           // Captured angles: tap ✕ to drop a bad one before saving.
           SizedBox(
             height: 84,

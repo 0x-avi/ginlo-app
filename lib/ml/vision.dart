@@ -23,8 +23,16 @@ class VisionResult {
   final List<Uint8List?> crops;
   final int preMs, inferMs, postMs, embedMs, embedCount;
 
-  const VisionResult(this.detections, this.vectors, this.crops, this.preMs, this.inferMs, this.postMs, this.embedMs,
-      this.embedCount);
+  const VisionResult(
+    this.detections,
+    this.vectors,
+    this.crops,
+    this.preMs,
+    this.inferMs,
+    this.postMs,
+    this.embedMs,
+    this.embedCount,
+  );
 
   /// Index of the biggest box, or -1.
   int get largest {
@@ -56,8 +64,17 @@ class Vision {
     int maxEmbeds = 12,
     bool wantCrops = false,
   }) {
-    final job = _Job(detector.interpreter.address, detector.spec, detector.labels, embedder?.interpreter.address,
-        frame, conf, embedder == null ? EmbedPick.none : pick, maxEmbeds, wantCrops);
+    final job = _Job(
+      detector.interpreter.address,
+      detector.spec,
+      detector.labels,
+      embedder?.interpreter.address,
+      frame,
+      conf,
+      embedder == null ? EmbedPick.none : pick,
+      maxEmbeds,
+      wantCrops,
+    );
     final run = _tail.then((_) => _spawn(job));
     _tail = run.then((_) {}, onError: (_) {});
     return run;
@@ -77,8 +94,17 @@ class _Job {
   final EmbedPick pick;
   final int maxEmbeds;
   final bool wantCrops;
-  _Job(this.detAddress, this.spec, this.labels, this.embAddress, this.frame, this.conf, this.pick, this.maxEmbeds,
-      this.wantCrops);
+  _Job(
+    this.detAddress,
+    this.spec,
+    this.labels,
+    this.embAddress,
+    this.frame,
+    this.conf,
+    this.pick,
+    this.maxEmbeds,
+    this.wantCrops,
+  );
 }
 
 VisionResult _run(_Job job) {

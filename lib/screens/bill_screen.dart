@@ -10,6 +10,7 @@ import '../ml/matcher.dart';
 import '../ml/models.dart';
 import '../ml/vision.dart';
 import '../widgets/camera_feed.dart';
+import '../widgets/camera_layout.dart';
 import '../widgets/tag_painter.dart';
 
 final _detSpec = detectorSpecs[Models.billDetector];
@@ -74,9 +75,7 @@ class _LiveBillState extends State<_LiveBill> {
     if (!mounted) return;
     setState(() {
       _last = r;
-      _matches = [
-        for (final v in r.vectors) v == null ? const Match(null, null, 0, 0, null) : _matcher.match(v),
-      ];
+      _matches = [for (final v in r.vectors) v == null ? const Match(null, null, 0, 0, null) : _matcher.match(v)];
     });
   }
 
@@ -103,9 +102,12 @@ class _LiveBillState extends State<_LiveBill> {
     final unknown = _matches.where((m) => !m.known).length;
     final total = counts.entries.fold(0.0, (s, e) => s + e.value * prices[e.key]!);
 
-    return Column(
-      children: [
-        Expanded(child: CameraFeed(onFrame: _onFrame, overlay: CustomPaint(painter: TagPainter(tags)))),
+    return CameraLayout(
+      camera: CameraFeed(
+        onFrame: _onFrame,
+        overlay: CustomPaint(painter: TagPainter(tags)),
+      ),
+      panel: [
         if (_matcher.isEmpty)
           const Padding(
             padding: EdgeInsets.all(8),
@@ -116,16 +118,26 @@ class _LiveBillState extends State<_LiveBill> {
           child: Column(
             children: [
               for (final e in counts.entries)
-                Row(children: [
-                  Expanded(child: Text('${e.key} × ${e.value}')),
-                  Text('₹${(e.value * prices[e.key]!).toStringAsFixed(2)}'),
-                ]),
-              if (unknown > 0) Row(children: [Expanded(child: Text('Unknown × $unknown')), const Text('—')]),
+                Row(
+                  children: [
+                    Expanded(child: Text('${e.key} × ${e.value}')),
+                    Text('₹${(e.value * prices[e.key]!).toStringAsFixed(2)}'),
+                  ],
+                ),
+              if (unknown > 0)
+                Row(
+                  children: [
+                    Expanded(child: Text('Unknown × $unknown')),
+                    const Text('—'),
+                  ],
+                ),
               const Divider(),
-              Row(children: [
-                Expanded(child: Text('Total', style: Theme.of(context).textTheme.titleMedium)),
-                Text('₹${total.toStringAsFixed(2)}', style: Theme.of(context).textTheme.titleMedium),
-              ]),
+              Row(
+                children: [
+                  Expanded(child: Text('Total', style: Theme.of(context).textTheme.titleMedium)),
+                  Text('₹${total.toStringAsFixed(2)}', style: Theme.of(context).textTheme.titleMedium),
+                ],
+              ),
             ],
           ),
         ),
@@ -139,14 +151,20 @@ class _LiveBillState extends State<_LiveBill> {
             ),
           ),
         if (isDev)
-          Row(children: [
-            const SizedBox(width: 16),
-            Text('match ≥ ${Matcher.threshold.toStringAsFixed(2)}'),
-            Expanded(
-              child: Slider(
-                  value: Matcher.threshold, min: 0.3, max: 0.95, onChanged: (v) => setState(() => Matcher.threshold = v)),
-            ),
-          ]),
+          Row(
+            children: [
+              const SizedBox(width: 16),
+              Text('match ≥ ${Matcher.threshold.toStringAsFixed(2)}'),
+              Expanded(
+                child: Slider(
+                  value: Matcher.threshold,
+                  min: 0.3,
+                  max: 0.95,
+                  onChanged: (v) => setState(() => Matcher.threshold = v),
+                ),
+              ),
+            ],
+          ),
         const SizedBox(height: 8),
       ],
     );

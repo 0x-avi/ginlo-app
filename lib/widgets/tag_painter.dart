@@ -21,16 +21,24 @@ class TagPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     for (final t in tags) {
       final rect = Rect.fromLTRB(
-          t.rect.left * size.width, t.rect.top * size.height, t.rect.right * size.width, t.rect.bottom * size.height);
-      canvas.drawRect(rect, Paint()
-        ..color = t.color
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = t.strokeWidth);
+        t.rect.left * size.width,
+        t.rect.top * size.height,
+        t.rect.right * size.width,
+        t.rect.bottom * size.height,
+      );
+      canvas.drawRect(
+        rect,
+        Paint()
+          ..color = t.color
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = t.strokeWidth,
+      );
       if (t.text.isEmpty) continue;
       final tag = TextPainter(
         text: TextSpan(
-            text: ' ${t.text} ',
-            style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.w600)),
+          text: ' ${t.text} ',
+          style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.w600),
+        ),
         textDirection: TextDirection.ltr,
       )..layout(maxWidth: size.width);
       final top = (rect.top - tag.height).clamp(0.0, size.height - tag.height);

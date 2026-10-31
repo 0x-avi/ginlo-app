@@ -69,13 +69,21 @@ Future<int?> showProductDialog(BuildContext context) {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TextField(controller: name, decoration: const InputDecoration(labelText: 'Name'), autofocus: true),
           TextField(
-              controller: price,
-              decoration: const InputDecoration(labelText: 'Price (₹)'),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+            controller: name,
+            decoration: const InputDecoration(labelText: 'Name'),
+            autofocus: true,
+          ),
           TextField(
-              controller: stock, decoration: const InputDecoration(labelText: 'Stock'), keyboardType: TextInputType.number),
+            controller: price,
+            decoration: const InputDecoration(labelText: 'Price (₹)'),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          ),
+          TextField(
+            controller: stock,
+            decoration: const InputDecoration(labelText: 'Stock'),
+            keyboardType: TextInputType.number,
+          ),
         ],
       ),
       actions: [
@@ -129,7 +137,11 @@ class ProductScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.push(
-            context, MaterialPageRoute(builder: (_) => Scaffold(body: LearnView(productId: product.id)))),
+          context,
+          MaterialPageRoute(
+            builder: (_) => Scaffold(body: LearnView(productId: product.id)),
+          ),
+        ),
         icon: const Icon(Icons.camera_alt),
         label: const Text('Teach angles'),
       ),
@@ -145,8 +157,10 @@ class ProductScreen extends StatelessWidget {
               children: [
                 Text('₹${product.price.toStringAsFixed(2)} · stock ${product.stock}'),
                 const SizedBox(height: 8),
-                Text('${angles.length} taught angles. Remove any that are blurry, cut off or show the wrong thing.',
-                    style: Theme.of(context).textTheme.bodySmall),
+                Text(
+                  '${angles.length} taught angles. Remove any that are blurry, cut off or show the wrong thing.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
                 const SizedBox(height: 8),
                 GridView.count(
                   crossAxisCount: 3,

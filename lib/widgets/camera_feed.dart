@@ -1,5 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show DeviceOrientation;
 
 import '../ml/frame.dart';
 
@@ -36,10 +37,14 @@ class _CameraFeedState extends State<CameraFeed> with WidgetsBindingObserver {
     _starting = true;
     try {
       final back = (await availableCameras()).firstWhere((c) => c.lensDirection == CameraLensDirection.back);
-      final cam = CameraController(back, ResolutionPreset.high,
-          enableAudio: false, imageFormatGroup: ImageFormatGroup.yuv420);
+      final cam = CameraController(
+        back,
+        ResolutionPreset.high,
+        enableAudio: false,
+        imageFormatGroup: ImageFormatGroup.yuv420,
+      );
       await cam.initialize(); // asks for camera permission the first time
-      await cam.startImageStream((img) => _onImage(img, back.sensorOrientation));
+      await cam.startImageStream((img) => _onImage(img, _uprightRotation(back, cam.value.deviceOrientation)));
       if (!mounted) return await cam.dispose();
       setState(() => _camera = cam);
     } catch (e) {
@@ -49,12 +54,28 @@ class _CameraFeedState extends State<CameraFeed> with WidgetsBindingObserver {
     }
   }
 
+  /// Clockwise degrees to turn a sensor frame so it matches what the user sees, however the
+  /// phone is held. The sensor is mounted at a fixed angle (usually 90°); the phone's own turn
+  /// is subtracted (same formula as Google's ML Kit samples, back camera).
+  static int _uprightRotation(CameraDescription camera, DeviceOrientation phone) {
+    const phoneDegrees = {
+      DeviceOrientation.portraitUp: 0,
+      DeviceOrientation.landscapeLeft: 90,
+      DeviceOrientation.portraitDown: 180,
+      DeviceOrientation.landscapeRight: 270,
+    };
+    return (camera.sensorOrientation - phoneDegrees[phone]! + 360) % 360;
+  }
+
   void _onImage(CameraImage img, int rotation) {
     if (_busy || !mounted) return; // still working on the previous frame
     _busy = true;
-    widget.onFrame(FrameData(img, rotation)).catchError((Object e) {
-      debugPrint('frame failed: $e');
-    }).whenComplete(() => _busy = false);
+    widget
+        .onFrame(FrameData(img, rotation))
+        .catchError((Object e) {
+          debugPrint('frame failed: $e');
+        })
+        .whenComplete(() => _busy = false);
   }
 
   /// The camera plugin doesn't handle this itself: Android takes the camera away when the
@@ -84,9 +105,10 @@ class _CameraFeedState extends State<CameraFeed> with WidgetsBindingObserver {
     final cam = _camera;
     if (cam == null) {
       return Center(
-          child: _error != null
-              ? Padding(padding: const EdgeInsets.all(16), child: Text('Camera: $_error'))
-              : const CircularProgressIndicator());
+        child: _error != null
+            ? Padding(padding: const EdgeInsets.all(16), child: Text('Camera: $_error'))
+            : const CircularProgressIndicator(),
+      );
     }
     // CameraPreview sizes itself to the camera's aspect ratio; the child is drawn exactly on top.
     return Center(child: CameraPreview(cam, child: widget.overlay));

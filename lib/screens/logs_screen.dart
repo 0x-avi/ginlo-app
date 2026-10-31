@@ -21,7 +21,11 @@ class LogsView extends StatelessWidget {
           children: [
             Align(
               alignment: Alignment.centerRight,
-              child: TextButton.icon(onPressed: log.clear, icon: const Icon(Icons.delete_outline), label: const Text('Clear')),
+              child: TextButton.icon(
+                onPressed: log.clear,
+                icon: const Icon(Icons.delete_outline),
+                label: const Text('Clear'),
+              ),
             ),
             for (final e in log.stats.entries) _ModelCard(e.key, e.value),
           ],
@@ -48,19 +52,22 @@ class _ModelCard extends StatelessWidget {
           children: [
             Text(model, style: t.titleMedium),
             const SizedBox(height: 4),
-            Text('${ms(s.avgWall)} per frame · ${(1000 / s.avgWall).toStringAsFixed(1)} fps',
-                style: t.headlineSmall),
-            Text('${s.frames} frames · fastest ${s.minWall} ms · slowest ${s.maxWall} ms · '
-                '${s.avgBoxes.toStringAsFixed(1)} boxes/frame'),
+            Text('${ms(s.avgWall)} per frame · ${(1000 / s.avgWall).toStringAsFixed(1)} fps', style: t.headlineSmall),
+            Text(
+              '${s.frames} frames · fastest ${s.minWall} ms · slowest ${s.maxWall} ms · '
+              '${s.avgBoxes.toStringAsFixed(1)} boxes/frame',
+            ),
             const Divider(),
             _row('Prepare (YUV→RGB, rotate, letterbox)', ms(s.avgPre)),
             _row('Model (TFLite inference)', ms(s.avgInfer)),
             _row('Boxes (decode + NMS)', ms(s.avgPost)),
             if (s.embedCount > 0)
-              _row('Embed (${(s.embedCount / s.frames).toStringAsFixed(1)} crops, '
-                  '${s.embedPerCrop.toStringAsFixed(0)} ms each)', ms(s.avgEmbed)),
-            _row('Overhead (isolate start, copying)',
-                ms(s.avgWall - s.avgPre - s.avgInfer - s.avgPost - s.avgEmbed)),
+              _row(
+                'Embed (${(s.embedCount / s.frames).toStringAsFixed(1)} crops, '
+                '${s.embedPerCrop.toStringAsFixed(0)} ms each)',
+                ms(s.avgEmbed),
+              ),
+            _row('Overhead (isolate start, copying)', ms(s.avgWall - s.avgPre - s.avgInfer - s.avgPost - s.avgEmbed)),
           ],
         ),
       ),
@@ -68,7 +75,12 @@ class _ModelCard extends StatelessWidget {
   }
 
   Widget _row(String label, String value) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
-        child: Row(children: [Expanded(child: Text(label)), Text(value)]),
-      );
+    padding: const EdgeInsets.symmetric(vertical: 2),
+    child: Row(
+      children: [
+        Expanded(child: Text(label)),
+        Text(value),
+      ],
+    ),
+  );
 }

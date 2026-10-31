@@ -19,12 +19,12 @@ class Product {
   const Product({this.id, required this.name, required this.price, this.stock = 0, this.family});
 
   factory Product.fromRow(Map<String, Object?> r) => Product(
-        id: r['id'] as int,
-        name: r['name'] as String,
-        price: (r['price'] as num).toDouble(),
-        stock: r['stock'] as int,
-        family: r['family'] as String?,
-      );
+    id: r['id'] as int,
+    name: r['name'] as String,
+    price: (r['price'] as num).toDouble(),
+    stock: r['stock'] as int,
+    family: r['family'] as String?,
+  );
 }
 
 /// The on-phone database. One file (ginlo.db) in the app's private storage.
@@ -73,8 +73,7 @@ class AppDb {
 
   // ------------------------------------------------------------ products
 
-  Future<List<Product>> products() async =>
-      (await db.query('products', orderBy: 'name')).map(Product.fromRow).toList();
+  Future<List<Product>> products() async => (await db.query('products', orderBy: 'name')).map(Product.fromRow).toList();
 
   /// Adds a product, or updates its price (and stock, if given) when the name exists.
   Future<int> upsertProduct(String name, double price, {int? stock}) async {
@@ -97,10 +96,12 @@ class AppDb {
 
   /// Number of taught angles per product id, for one embedder.
   Future<Map<int, int>> angleCounts(String model) async => {
-        for (final r in await db.rawQuery(
-            'SELECT product_id, COUNT(*) AS n FROM embeddings WHERE model = ? GROUP BY product_id', [model]))
-          r['product_id'] as int: r['n'] as int,
-      };
+    for (final r in await db.rawQuery(
+      'SELECT product_id, COUNT(*) AS n FROM embeddings WHERE model = ? GROUP BY product_id',
+      [model],
+    ))
+      r['product_id'] as int: r['n'] as int,
+  };
 
   // ------------------------------------------------------------ embeddings (taught angles)
 
@@ -118,29 +119,40 @@ class AppDb {
   /// Every taught angle for one embedder, with its product (what the Matcher searches).
   Future<List<Angle>> angles(String model) async {
     final rows = await db.rawQuery(
-        'SELECT e.id, e.product_id, e.vector, p.name, p.price FROM embeddings e '
-        'JOIN products p ON p.id = e.product_id WHERE e.model = ?',
-        [model]);
+      'SELECT e.id, e.product_id, e.vector, p.name, p.price FROM embeddings e '
+      'JOIN products p ON p.id = e.product_id WHERE e.model = ?',
+      [model],
+    );
     return [
       for (final r in rows)
-        Angle(r['id'] as int, r['product_id'] as int, r['name'] as String, (r['price'] as num).toDouble(),
-            // copy into a fresh buffer: a Float32List view needs 4-byte alignment
-            Uint8List.fromList(r['vector'] as Uint8List).buffer.asFloat32List()),
+        Angle(
+          r['id'] as int,
+          r['product_id'] as int,
+          r['name'] as String,
+          (r['price'] as num).toDouble(),
+          // copy into a fresh buffer: a Float32List view needs 4-byte alignment
+          Uint8List.fromList(r['vector'] as Uint8List).buffer.asFloat32List(),
+        ),
     ];
   }
 
   /// One product's taught angles (id + crop image) for the gallery where you remove bad ones.
   Future<List<({int id, Uint8List? crop})>> productAngles(int productId, String model) async => [
-        for (final r in await db.query('embeddings',
-            columns: ['id', 'crop'], where: 'product_id = ? AND model = ?', whereArgs: [productId, model]))
-          (id: r['id'] as int, crop: r['crop'] as Uint8List?),
-      ];
+    for (final r in await db.query(
+      'embeddings',
+      columns: ['id', 'crop'],
+      where: 'product_id = ? AND model = ?',
+      whereArgs: [productId, model],
+    ))
+      (id: r['id'] as int, crop: r['crop'] as Uint8List?),
+  ];
 
   /// Removes a taught angle (and the same crop's fingerprints for the other embedder).
   Future<void> deleteAngle(int id) async {
     await db.rawDelete(
-        'DELETE FROM embeddings WHERE id = ? OR (crop IS NOT NULL AND crop = (SELECT crop FROM embeddings WHERE id = ?))',
-        [id, id]);
+      'DELETE FROM embeddings WHERE id = ? OR (crop IS NOT NULL AND crop = (SELECT crop FROM embeddings WHERE id = ?))',
+      [id, id],
+    );
     _changed();
   }
 

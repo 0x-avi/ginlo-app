@@ -19,9 +19,15 @@ class EmbedderSpec {
 
 const embedderSpecs = [
   EmbedderSpec(
-      id: 'mobilenet_v3_small', title: 'MobileNet-V3 small (1024-d)', asset: 'assets/models/mobilenet_v3_small.tflite'),
+    id: 'mobilenet_v3_small',
+    title: 'MobileNet-V3 small (1024-d)',
+    asset: 'assets/models/mobilenet_v3_small.tflite',
+  ),
   EmbedderSpec(
-      id: 'mobilenet_v3_large', title: 'MobileNet-V3 large (1280-d)', asset: 'assets/models/mobilenet_v3_large.tflite'),
+    id: 'mobilenet_v3_large',
+    title: 'MobileNet-V3 large (1280-d)',
+    asset: 'assets/models/mobilenet_v3_large.tflite',
+  ),
 ];
 
 class Embedder {
@@ -69,7 +75,10 @@ Uint8List cropJpeg(FrameData f, Rect box, {int size = 224, double pad = 0.05}) {
   final im = img.Image(width: w, height: h);
   for (var oy = 0; oy < h; oy++) {
     for (var ox = 0; ox < w; ox++) {
-      final px = f.rgb(c.x0 + math.min<int>(c.w - 1, (ox / scale).floor()), c.y0 + math.min<int>(c.h - 1, (oy / scale).floor()));
+      final px = f.rgb(
+        c.x0 + math.min<int>(c.w - 1, (ox / scale).floor()),
+        c.y0 + math.min<int>(c.h - 1, (oy / scale).floor()),
+      );
       im.setPixelRgb(ox, oy, px >> 16, (px >> 8) & 0xFF, px & 0xFF);
     }
   }

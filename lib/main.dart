@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'config.dart';
 import 'screens/bill_screen.dart';
@@ -9,9 +8,7 @@ import 'screens/lab_screen.dart';
 import 'screens/learn_screen.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  // Portrait only: the camera frame rotation and box drawing assume it.
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  // Any orientation: CameraFeed turns each frame to match how the phone is held.
   runApp(const GinLoApp());
 }
 
@@ -34,7 +31,19 @@ class GinLoApp extends StatelessWidget {
   }
 }
 
-/// Bottom tabs: Bill (opens first), Home (earnings), Catalog, Learn; dev adds Lab.
+/// One tab: its icons and label.
+typedef _Tab = ({IconData icon, IconData selected, String label});
+
+const List<_Tab> _tabs = [
+  (icon: Icons.receipt_long_outlined, selected: Icons.receipt_long, label: 'Bill'),
+  (icon: Icons.home_outlined, selected: Icons.home, label: 'Home'),
+  (icon: Icons.inventory_2_outlined, selected: Icons.inventory_2, label: 'Catalog'),
+  (icon: Icons.school_outlined, selected: Icons.school, label: 'Learn'),
+  (icon: Icons.science_outlined, selected: Icons.science, label: 'Lab'), // dev only
+];
+
+/// Tabs: Bill (opens first), Home (earnings), Catalog, Learn; dev adds Lab.
+/// Portrait: tab bar at the bottom. Landscape: a rail on the left, so the camera keeps its height.
 ///
 /// Stateful because it remembers which tab is selected.
 class AppShell extends StatefulWidget {
@@ -49,33 +58,54 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    final tabs = isDev ? _tabs : _tabs.sublist(0, 4);
+    final size = MediaQuery.sizeOf(context);
+    final landscape = size.width > size.height;
+
+    // IndexedStack keeps every tab alive, so switching tabs doesn't reset them
+    // (e.g. a half-finished bill survives a quick look at the catalog).
+    // Camera tabs get `active` so only the visible one runs its camera.
+    final body = IndexedStack(
+      index: _tab,
+      children: [
+        BillScreen(active: _tab == 0),
+        const HomeScreen(),
+        const CatalogScreen(),
+        LearnScreen(active: _tab == 3),
+        if (isDev) LabScreen(active: _tab == 4),
+      ],
+    );
+    void select(int i) => setState(() => _tab = i);
+
+    if (landscape) {
+      return Scaffold(
+        body: SafeArea(
+          child: Row(
+            children: [
+              NavigationRail(
+                selectedIndex: _tab,
+                onDestinationSelected: select,
+                labelType: NavigationRailLabelType.all,
+                destinations: [
+                  for (final t in tabs)
+                    NavigationRailDestination(icon: Icon(t.icon), selectedIcon: Icon(t.selected), label: Text(t.label)),
+                ],
+              ),
+              const VerticalDivider(width: 1),
+              Expanded(child: body),
+            ],
+          ),
+        ),
+      );
+    }
     return Scaffold(
-      // IndexedStack keeps every tab alive, so switching tabs doesn't reset them
-      // (e.g. a half-finished bill survives a quick look at the catalog).
-      // Camera tabs get `active` so only the visible one runs its camera.
-      body: IndexedStack(
-        index: _tab,
-        children: [
-          BillScreen(active: _tab == 0),
-          const HomeScreen(),
-          const CatalogScreen(),
-          LearnScreen(active: _tab == 3),
-          if (isDev) LabScreen(active: _tab == 4),
-        ],
-      ),
+      body: body,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
-        onDestinationSelected: (i) => setState(() => _tab = i),
+        onDestinationSelected: select,
         destinations: [
-          const NavigationDestination(
-              icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: 'Bill'),
-          const NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
-          const NavigationDestination(
-              icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: 'Catalog'),
-          const NavigationDestination(
-              icon: Icon(Icons.school_outlined), selectedIcon: Icon(Icons.school), label: 'Learn'),
-          if (isDev)
-            const NavigationDestination(icon: Icon(Icons.science_outlined), selectedIcon: Icon(Icons.science), label: 'Lab'),
+          for (final t in tabs)
+            NavigationDestination(icon: Icon(t.icon), selectedIcon: Icon(t.selected), label: t.label),
         ],
       ),
     );
