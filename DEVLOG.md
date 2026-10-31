@@ -108,3 +108,13 @@ before the variants existed the same 8 variants.
 every angle now has 8 fingerprints. Smoothing sliders not yet tuned on the phone — defaults: show after 2,
 keep 2, vote 4, count hold 5, merge 0.6, link 0.3, glide 0.5. Note: for old angles "further away" is synthetic
 (edge pixels repeated), since the stored crop has no real surroundings.
+
+---
+
+## Backlog (planned, not built)
+- **Smoothing benchmark** (requested 31 Oct, after entry 7): photograph a scene with a known number of items, record
+  ~5 s of frames (about how long a vendor waits before tapping Capture), and score smoothing settings by how many
+  frames show the correct items/counts. Plan: record the raw per-frame results once (boxes + matched names), then
+  replay that recording through many `SmoothSettings` combinations offline — replaying is instant (no model runs),
+  so one recording tests every combination. Pick the best, make it the prod default. Repeat per use case
+  (spread out, crowded, stacked, mixed lighting) and keep the scores in this log.

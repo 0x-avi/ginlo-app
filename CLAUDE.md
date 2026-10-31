@@ -10,3 +10,4 @@
 - Flavors: `dev` = GinLo Dev (boxes, scores, Lab tab), `prod` = GinLo (shop app, smoothed output).
 - New `.tflite` models: run `tools/inline_buffers.py` first (the bundled LiteRT 1.4.0 can't read external weights).
 - Camera rotation has one source of truth: the screen angle from `MainActivity.kt`; picture and frames both use it.
+- Open items live in the **Backlog** section at the end of `DEVLOG.md`; remind the user of them when a natural break comes up.
