@@ -30,6 +30,26 @@ android {
         versionName = flutter.versionName
     }
 
+    // Two apps from one codebase, installable side by side:
+    //   dev  -> "GinLo Dev" (in.ginlo.ginlo.dev): live boxes, scores, model picker
+    //   prod -> "GinLo"     (in.ginlo.ginlo):     the shopkeeper app
+    buildFeatures {
+        resValues = true // lets each flavor set its own app_name
+    }
+    flavorDimensions += "env"
+    productFlavors {
+        create("dev") {
+            dimension = "env"
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+            resValue("string", "app_name", "GinLo Dev")
+        }
+        create("prod") {
+            dimension = "env"
+            resValue("string", "app_name", "GinLo")
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
