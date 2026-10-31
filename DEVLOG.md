@@ -87,3 +87,24 @@ variants so recognition survives dim light, glare, distance and products lying s
 
 **How it went:** analyze clean, 8 tests pass, installed on the phone. Not yet checked on the phone (it was
 locked): Capture timing, and prod view vs raw on Bill.
+
+## 7. Tunable smoothing, steady counts, augmenting old angles — this commit
+**Goal:** fewer duplicate boxes and jumping item counts in prod, every smoothing knob tunable; give angles taught
+before the variants existed the same 8 variants.
+- `lib/ml/smoother.dart`: `SmoothSettings` (saved as JSON in the settings table) — show after N frames, keep
+  through N misses, name vote frames, **count hold frames**, **merge duplicates** (hide a box overlapping a
+  bigger one by ≥ X of the smaller box; before, only boxes ~fully inside were hidden), link overlap, glide.
+  New `CountSmoother`: each product's listed count = its most common count over the last N frames.
+- `lib/screens/bill_screen.dart`: dev **Smoothing settings** sheet with a slider per knob (live, saved on close,
+  reset to defaults); prod item list uses the held counts.
+- `lib/ml/frame.dart` / `embedder.dart`: `Pixels` interface so the embedder reads live frames *or* stored crop
+  pictures (`ImagePixels`); area outside the picture repeats edge pixels (lets "further away" work on a stored crop).
+- `lib/ml/vision.dart`: `embedStoredVariants()` fingerprints stored crop JPEGs in all 8 variants.
+- `lib/data/db.dart`: `anglesNeedingVariants()`, `replaceAngleVectors()`.
+- `lib/screens/catalog_screen.dart`: **Upgrade N old angles** button (only shown when needed).
+- `test/smoother_test.dart`: 11 tests (merging, live settings, save/load, held counts).
+
+**How it went:** on the phone the button showed "Upgrade 18 old angles" (3 products × 6) and finished in ~5 s:
+every angle now has 8 fingerprints. Smoothing sliders not yet tuned on the phone — defaults: show after 2,
+keep 2, vote 4, count hold 5, merge 0.6, link 0.3, glide 0.5. Note: for old angles "further away" is synthetic
+(edge pixels repeated), since the stored crop has no real surroundings.

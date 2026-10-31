@@ -2,6 +2,7 @@ import 'dart:isolate';
 import 'dart:typed_data';
 import 'dart:ui' show Rect;
 
+import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
 
 import 'detector.dart';
@@ -90,6 +91,22 @@ class Vision {
     return _queue(() => _spawnVariants(address, frame, box));
   }
 
+  /// Upgrading old angles: fingerprint each stored crop picture (JPEG) in every [teachVariants] way.
+  /// One list of vectors per picture, in the same order.
+  static Future<List<List<Float32List>>> embedStoredVariants(Embedder embedder, List<Uint8List> jpegs) {
+    final address = embedder.interpreter.address;
+    return _queue(
+      () => Isolate.run(() {
+        final emb = Interpreter.fromAddress(address, allocated: true);
+        final input = Float32List(Embedder.size * Embedder.size * 3);
+        List<Float32List> variants(ImagePixels px) => [
+          for (final v in teachVariants) _embed(emb, px, storedCropBox, input, v),
+        ];
+        return [for (final jpeg in jpegs) variants(ImagePixels(img.decodeJpg(jpeg)!))];
+      }),
+    );
+  }
+
   static Future<T> _queue<T>(Future<T> Function() work) {
     final run = _tail.then((_) => work());
     _tail = run.then((_) {}, onError: (_) {});
@@ -110,7 +127,7 @@ class Vision {
       });
 }
 
-Float32List _embed(Interpreter emb, FrameData frame, Rect box, Float32List input, Variant v) {
+Float32List _embed(Interpreter emb, Pixels frame, Rect box, Float32List input, Variant v) {
   prepareEmbedderInput(frame, box, input, pad: v.pad, turns: v.turns, gain: v.gain);
   emb.getInputTensor(0).data = input.buffer.asUint8List();
   emb.invoke();

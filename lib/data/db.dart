@@ -156,6 +156,37 @@ class AppDb {
     _changed();
   }
 
+  /// Taught angles (one per crop picture) that have fewer than [variants] fingerprints for this
+  /// embedder, i.e. taught before every capture was saved in all teach variants.
+  Future<List<({int productId, Uint8List crop})>> anglesNeedingVariants(String model, int variants) async => [
+    for (final r in await db.rawQuery(
+      'SELECT product_id, crop FROM embeddings WHERE model = ? AND crop IS NOT NULL '
+      'GROUP BY product_id, crop HAVING COUNT(*) < ?',
+      [model, variants],
+    ))
+      (productId: r['product_id'] as int, crop: r['crop'] as Uint8List),
+  ];
+
+  /// Replaces one angle's fingerprints (for this embedder) with [vectors], keeping its crop picture.
+  Future<void> replaceAngleVectors(int productId, String model, Uint8List crop, List<Float32List> vectors) async {
+    await db.transaction((tx) async {
+      await tx.delete(
+        'embeddings',
+        where: 'product_id = ? AND model = ? AND crop = ?',
+        whereArgs: [productId, model, crop],
+      );
+      for (final v in vectors) {
+        await tx.insert('embeddings', {
+          'product_id': productId,
+          'model': model,
+          'vector': v.buffer.asUint8List(v.offsetInBytes, v.lengthInBytes),
+          'crop': crop,
+        });
+      }
+    });
+    _changed();
+  }
+
   // ------------------------------------------------------------ settings
 
   Future<String?> setting(String key) async {

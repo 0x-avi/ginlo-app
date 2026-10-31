@@ -47,15 +47,23 @@ class _LiveBillState extends State<_LiveBill> {
   VisionResult? _last;
   List<Match> _matches = const [];
 
-  /// Prod shows steady results: items must persist across frames, names are voted over the last
-  /// 4 frames, boxes glide (see smoother.dart). Dev shows raw per-frame output unless [_prodView].
-  final _smoother = FrameSmoother();
+  /// Prod shows steady results: items must persist across frames, names are voted, boxes glide,
+  /// duplicates merge, counts are held (see smoother.dart). Dev shows raw per-frame output unless
+  /// [_prodView]. The knobs are tunable in dev (Smoothing settings) and saved in the database.
+  final _settings = SmoothSettings();
+  late final _smoother = FrameSmoother(_settings);
+  late final _countSmoother = CountSmoother(_settings);
   List<SteadyItem> _steady = const [];
+  Map<String?, int> _steadyCounts = const {}; // product (null = Unknown) -> held count
+  final _prices = <String, double>{};
   bool _prodView = false;
+
+  static const _settingsKey = 'smoothing';
 
   @override
   void initState() {
     super.initState();
+    _loadSettings();
     _loadCatalog();
     AppDb.changes.addListener(_loadCatalog); // newly taught products are recognised right away
   }
@@ -75,6 +83,26 @@ class _LiveBillState extends State<_LiveBill> {
     }
   }
 
+  Future<void> _loadSettings() async {
+    try {
+      final saved = SmoothSettings.fromJsonString(await (await AppDb.open()).setting(_settingsKey));
+      if (mounted) setState(() => _copySettings(saved));
+    } catch (e) {
+      debugPrint('smoothing settings: $e');
+    }
+  }
+
+  void _copySettings(SmoothSettings from) {
+    _settings
+      ..voteFrames = from.voteFrames
+      ..showAfter = from.showAfter
+      ..keepMissed = from.keepMissed
+      ..glide = from.glide
+      ..linkOverlap = from.linkOverlap
+      ..mergeOverlap = from.mergeOverlap
+      ..countFrames = from.countFrames;
+  }
+
   Future<void> _onFrame(FrameData frame) async {
     final det = await Models.detector(_detSpec), emb = await Models.embedder(_embSpec);
     final wall = Stopwatch()..start();
@@ -88,7 +116,139 @@ class _LiveBillState extends State<_LiveBill> {
         for (var i = 0; i < r.detections.length; i++)
           Sighting(r.detections[i].box, _matches[i].name, _matches[i].price),
       ]);
+      final counts = <String?, int>{};
+      for (final it in _steady) {
+        counts[it.name] = (counts[it.name] ?? 0) + 1;
+        if (it.name != null) _prices[it.name!] = it.price;
+      }
+      _steadyCounts = _countSmoother.update(counts);
     });
+  }
+
+  /// Dev: tune every smoothing knob live; saved to the database when the sheet closes.
+  Future<void> _openSmoothingSettings() async {
+    setState(() => _prodView = true); // the knobs only affect the smoothed view
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheet) {
+          void set(void Function() change) {
+            setSheet(change);
+            setState(() {});
+          }
+
+          Widget knob(
+            String label,
+            String help,
+            double value,
+            double min,
+            double max,
+            int? divisions,
+            void Function(double) onChanged,
+          ) {
+            final shown = divisions == null ? value.toStringAsFixed(2) : value.round().toString();
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('$label: $shown', style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Text(help, style: const TextStyle(fontSize: 12)),
+                  Slider(
+                    value: value,
+                    min: min,
+                    max: max,
+                    divisions: divisions,
+                    onChanged: (v) => set(() => onChanged(v)),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final p = _settings;
+          return SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const ListTile(title: Text('Smoothing (prod view)')),
+                  knob(
+                    'Show after (frames)',
+                    'An item appears only once seen in this many frames. Higher = fewer ghost boxes, slower to appear.',
+                    p.showAfter.toDouble(),
+                    1,
+                    6,
+                    5,
+                    (v) => p.showAfter = v.round(),
+                  ),
+                  knob(
+                    'Keep through misses (frames)',
+                    'An item stays this many missed frames. Higher = less blinking, slower to clear.',
+                    p.keepMissed.toDouble(),
+                    0,
+                    6,
+                    6,
+                    (v) => p.keepMissed = v.round(),
+                  ),
+                  knob(
+                    'Name vote (frames)',
+                    'Name = most common over this many frames. Higher = steadier names.',
+                    p.voteFrames.toDouble(),
+                    1,
+                    10,
+                    9,
+                    (v) => p.voteFrames = v.round(),
+                  ),
+                  knob(
+                    'Count hold (frames)',
+                    'Item list counts = most common over this many frames. Higher = steadier counts.',
+                    p.countFrames.toDouble(),
+                    1,
+                    12,
+                    11,
+                    (v) => p.countFrames = v.round(),
+                  ),
+                  knob(
+                    'Merge duplicates (overlap)',
+                    'Hide a box overlapping a bigger one this much. Lower = merges more.',
+                    p.mergeOverlap,
+                    0.2,
+                    1.0,
+                    null,
+                    (v) => p.mergeOverlap = v,
+                  ),
+                  knob(
+                    'Same item if overlap ≥',
+                    'Boxes in consecutive frames overlapping this much are one item.',
+                    p.linkOverlap,
+                    0.1,
+                    0.8,
+                    null,
+                    (v) => p.linkOverlap = v,
+                  ),
+                  knob(
+                    'Box glide',
+                    'How far a box moves to its new position per frame. 1 = jumps.',
+                    p.glide,
+                    0.1,
+                    1.0,
+                    null,
+                    (v) => p.glide = v,
+                  ),
+                  TextButton(
+                    onPressed: () => set(() => _copySettings(SmoothSettings())),
+                    child: const Text('Reset to defaults'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+    await (await AppDb.open()).setSetting(_settingsKey, _settings.toJsonString());
   }
 
   @override
@@ -114,13 +274,22 @@ class _LiveBillState extends State<_LiveBill> {
     ];
 
     // What's in view right now: product -> count (the bill this view would make).
+    // Smoothed: each product's count held over the last few frames. Raw: this frame's boxes.
     final counts = <String, int>{};
-    final prices = <String, double>{};
-    for (final it in items.where((it) => it.name != null)) {
-      counts[it.name!] = (counts[it.name!] ?? 0) + 1;
-      prices[it.name!] = it.price;
+    final prices = <String, double>{..._prices};
+    var unknown = 0;
+    if (smooth) {
+      _steadyCounts.forEach((name, n) => name == null ? unknown = n : counts[name] = n);
+    } else {
+      for (final it in items) {
+        if (it.name == null) {
+          unknown++;
+        } else {
+          counts[it.name!] = (counts[it.name!] ?? 0) + 1;
+          prices[it.name!] = it.price;
+        }
+      }
     }
-    final unknown = items.where((it) => it.name == null).length;
     final total = counts.entries.fold(0.0, (s, e) => s + e.value * prices[e.key]!);
 
     return CameraLayout(
@@ -182,6 +351,15 @@ class _LiveBillState extends State<_LiveBill> {
             title: const Text('Prod view (smoothed)'),
             value: _prodView,
             onChanged: (v) => setState(() => _prodView = v),
+          ),
+        if (isDev)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: _openSmoothingSettings,
+              icon: const Icon(Icons.tune),
+              label: const Text('Smoothing settings'),
+            ),
           ),
         if (isDev)
           Row(

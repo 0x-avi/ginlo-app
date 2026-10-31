@@ -51,4 +51,45 @@ void main() {
     final out = s.update([seen(maggi, 'Maggi'), seen(lays, 'Lays')]);
     expect(out.map((i) => i.name), unorderedEquals(['Maggi', 'Lays']));
   });
+
+  test('a duplicate box half-overlapping a bigger one is merged away', () {
+    final s = FrameSmoother();
+    const dup = Rect.fromLTWH(0.2, 0.2, 0.25, 0.25); // 2nd box over most of the same can
+    s.update([seen(maggi, 'Maggi'), seen(dup, 'Maggi')]);
+    expect(s.update([seen(maggi, 'Maggi'), seen(dup, 'Maggi')]), hasLength(1));
+  });
+
+  test('settings are live: showAfter 3 needs three frames', () {
+    final settings = SmoothSettings()..showAfter = 3;
+    final s = FrameSmoother(settings);
+    s.update([seen(maggi, 'Maggi')]);
+    expect(s.update([seen(maggi, 'Maggi')]), isEmpty);
+    expect(s.update([seen(maggi, 'Maggi')]), hasLength(1));
+  });
+
+  test('settings survive a save and load', () {
+    final a = SmoothSettings()
+      ..voteFrames = 6
+      ..glide = 0.3;
+    final b = SmoothSettings.fromJsonString(a.toJsonString());
+    expect(b.voteFrames, 6);
+    expect(b.glide, 0.3);
+    expect(b.showAfter, SmoothSettings().showAfter); // untouched values keep defaults
+  });
+
+  test('item counts hold steady through a one-frame dip', () {
+    final c = CountSmoother(SmoothSettings()..countFrames = 5);
+    for (var i = 0; i < 3; i++) {
+      c.update({'Maggi': 3});
+    }
+    expect(c.update({'Maggi': 2}), {'Maggi': 3}); // one frame saw only 2
+    expect(c.update({'Maggi': 3}), {'Maggi': 3});
+  });
+
+  test('an item missing from most recent frames drops out of the list', () {
+    final c = CountSmoother(SmoothSettings()..countFrames = 3);
+    c.update({'Lays': 1});
+    c.update({});
+    expect(c.update({}), isEmpty);
+  });
 }

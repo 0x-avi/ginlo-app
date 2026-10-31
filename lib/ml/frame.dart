@@ -2,9 +2,18 @@ import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
 
+/// Anything the embedder can read pixels from: a live camera frame, or a stored crop picture.
+abstract interface class Pixels {
+  int get uprightWidth;
+  int get uprightHeight;
+
+  /// Colour of pixel (x, y) as 0xRRGGBB.
+  int rgb(int x, int y);
+}
+
 /// A copy of one camera frame that can be sent to a background isolate.
 /// Android gives YUV420: a full-size brightness plane (Y) and quarter-size colour planes (U, V).
-class FrameData {
+class FrameData implements Pixels {
   final Uint8List y, u, v;
   final int width, height, yRowStride, uvRowStride, uvPixelStride;
 
@@ -24,10 +33,13 @@ class FrameData {
   bool get _turned => rotation == 90 || rotation == 270;
 
   /// Size of the frame as the user sees it (portrait).
+  @override
   int get uprightWidth => _turned ? height : width;
+  @override
   int get uprightHeight => _turned ? width : height;
 
   /// Colour of the upright pixel (ux, uy) as 0xRRGGBB.
+  @override
   int rgb(int ux, int uy) {
     // upright pixel -> sensor pixel
     int sx, sy;

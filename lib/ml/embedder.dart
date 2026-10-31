@@ -41,8 +41,27 @@ class Embedder {
       Embedder._(spec, await Interpreter.fromAsset(spec.asset, options: InterpreterOptions()..threads = 4));
 }
 
-/// Box (0..1 of the upright frame) grown by [pad] on each side, in upright pixels.
-({int x0, int y0, int w, int h}) _cropRect(FrameData f, Rect box, double pad) {
+/// A decoded picture (e.g. a stored crop JPEG) as [Pixels].
+class ImagePixels implements Pixels {
+  ImagePixels(this.image);
+  final img.Image image;
+  @override
+  int get uprightWidth => image.width;
+  @override
+  int get uprightHeight => image.height;
+  @override
+  int rgb(int x, int y) {
+    final p = image.getPixel(x, y);
+    return (p.r.toInt() << 16) | (p.g.toInt() << 8) | p.b.toInt();
+  }
+}
+
+/// Where the product sits inside a stored crop: crops are saved with a 5% margin on each side
+/// (see [cropJpeg]), so the product's box is the picture minus that margin.
+const storedCropBox = Rect.fromLTRB(0.05 / 1.1, 0.05 / 1.1, 1 - 0.05 / 1.1, 1 - 0.05 / 1.1);
+
+/// Box (0..1 of the upright frame) grown by [pad] on each side, in upright pixels, kept inside the frame.
+({int x0, int y0, int w, int h}) _cropRect(Pixels f, Rect box, double pad) {
   final uw = f.uprightWidth, uh = f.uprightHeight;
   final int x0 = ((box.left - box.width * pad) * uw).floor().clamp(0, uw - 1);
   final int y0 = ((box.top - box.height * pad) * uh).floor().clamp(0, uh - 1);
@@ -75,9 +94,13 @@ const teachVariants = [
 
 /// Crop the box out of the frame, stretch it to 224x224, values 0..1 (NHWC).
 /// [turns] rotates the crop clockwise, [gain] scales brightness (teach variants).
-void prepareEmbedderInput(FrameData f, Rect box, Float32List out, {double pad = 0.05, int turns = 0, double gain = 1}) {
+/// Parts of the area outside the picture repeat its edge pixels (so "further away" still works
+/// for a stored crop, which has no real surroundings).
+void prepareEmbedderInput(Pixels f, Rect box, Float32List out, {double pad = 0.05, int turns = 0, double gain = 1}) {
   const s = Embedder.size;
-  final c = _cropRect(f, box, pad);
+  final uw = f.uprightWidth, uh = f.uprightHeight;
+  final x0 = (box.left - box.width * pad) * uw, y0 = (box.top - box.height * pad) * uh;
+  final w = box.width * (1 + 2 * pad) * uw, h = box.height * (1 + 2 * pad) * uh;
   for (var oy = 0; oy < s; oy++) {
     for (var ox = 0; ox < s; ox++) {
       // output pixel -> position in the (unturned) crop, both as 0..1
@@ -88,10 +111,7 @@ void prepareEmbedderInput(FrameData f, Rect box, Float32List out, {double pad = 
         3 => (1 - ny, nx),
         _ => (nx, ny),
       };
-      final px = f.rgb(
-        c.x0 + math.min<int>(c.w - 1, (cx * c.w).floor()),
-        c.y0 + math.min<int>(c.h - 1, (cy * c.h).floor()),
-      );
+      final px = f.rgb((x0 + cx * w).floor().clamp(0, uw - 1), (y0 + cy * h).floor().clamp(0, uh - 1));
       final i = (oy * s + ox) * 3;
       out[i] = math.min(1, (px >> 16) / 255 * gain);
       out[i + 1] = math.min(1, ((px >> 8) & 0xFF) / 255 * gain);
@@ -101,7 +121,7 @@ void prepareEmbedderInput(FrameData f, Rect box, Float32List out, {double pad = 
 }
 
 /// The same crop as a small JPEG, saved with each taught angle so you can see (and delete) it.
-Uint8List cropJpeg(FrameData f, Rect box, {int size = 224, double pad = 0.05}) {
+Uint8List cropJpeg(Pixels f, Rect box, {int size = 224, double pad = 0.05}) {
   final c = _cropRect(f, box, pad);
   final scale = size / math.max(c.w, c.h);
   final w = math.max<int>(1, (c.w * scale).round()), h = math.max<int>(1, (c.h * scale).round());
