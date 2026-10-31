@@ -153,12 +153,16 @@ old upgrade and can't be recovered.
 ---
 
 ## Backlog (planned, not built)
-- **Smoothing benchmark** (requested 31 Oct, after entry 7): photograph a scene with a known number of items, record
-  ~5 s of frames (about how long a vendor waits before tapping Capture), and score smoothing settings by how many
-  frames show the correct items/counts. Plan: record the raw per-frame results once (boxes + matched names), then
-  replay that recording through many `SmoothSettings` combinations offline — replaying is instant (no model runs),
-  so one recording tests every combination. Pick the best, make it the prod default. Repeat per use case
-  (spread out, crowded, stacked, mixed lighting) and keep the scores in this log.
+- **Smoothing benchmark** (requested 31 Oct, after entry 7; extended after entry 9): the user builds a test set of
+  scenes with known item counts; record ~5 s of raw per-frame results per scene (about how long a vendor waits
+  before tapping Capture) once, then replay offline (instant, no model runs) through every candidate and setting:
+  1. **FrameSmoother** (current): link boxes to last frame's position by overlap, name vote, merge, held counts.
+  2. **ByteTrack-style two-stage matching**: strong boxes (≥ ~0.25) can start items; weak boxes (0.1–0.25,
+     not fingerprinted) can only keep existing items alive — targets blinking items / jumping counts.
+  3. **2 + Kalman filter**: predict each item's next position from its velocity before linking — should only
+     matter when items or the camera move steadily (sliding items, panning); measure it rather than assume.
+  Score: share of frames showing exactly the right items and counts, time to reach the right count, false items.
+  Pick the winner per use case (spread, crowded, stacked, dim, moving) and make it the prod default.
 - **Teach from a 5-second video** (requested 31 Oct, after entry 9): instead of tapping Capture 6 times, record ~5 s
   while turning the product; the app picks the frames itself. Plan:
   1. While recording, take the biggest box each frame (as Learn does now), skip blurry frames (sharpness check).
