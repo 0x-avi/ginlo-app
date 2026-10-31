@@ -28,6 +28,7 @@ class LabScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Lab'),
+          toolbarHeight: _portrait(context) ? null : 0, // landscape: just the sub-tabs
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Detect'),
@@ -173,4 +174,9 @@ class _EmbedLabViewState extends State<EmbedLabView> {
       ],
     );
   }
+}
+
+bool _portrait(BuildContext context) {
+  final s = MediaQuery.sizeOf(context);
+  return s.height >= s.width;
 }

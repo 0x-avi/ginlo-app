@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'config.dart';
 import 'screens/bill_screen.dart';
@@ -9,9 +8,7 @@ import 'screens/lab_screen.dart';
 import 'screens/learn_screen.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  // Portrait only: one simple, steady camera view; frames are turned by the sensor's fixed angle.
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  // Any orientation: CameraFeed turns each frame to match how the phone is held.
   runApp(const GinLoApp());
 }
 
@@ -46,6 +43,7 @@ const List<_Tab> _tabs = [
 ];
 
 /// Tabs: Bill (opens first), Home (earnings), Catalog, Learn; dev adds Lab.
+/// Portrait: tab bar at the bottom. Landscape: a rail on the left, so the camera keeps its height.
 ///
 /// Stateful because it remembers which tab is selected.
 class AppShell extends StatefulWidget {
@@ -58,14 +56,21 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _tab = 0; // Bill: the shopkeeper lands straight on billing
 
+  // Portrait (bottom bar) and landscape (side rail) wrap the tabs differently; this key keeps the
+  // tabs - and the running camera - the same widgets across the switch instead of rebuilding them.
+  final _tabsKey = GlobalKey();
+
   @override
   Widget build(BuildContext context) {
     final tabs = isDev ? _tabs : _tabs.sublist(0, 4);
+    final size = MediaQuery.sizeOf(context);
+    final landscape = size.width > size.height;
 
     // IndexedStack keeps every tab alive, so switching tabs doesn't reset them
     // (e.g. a half-finished bill survives a quick look at the catalog).
     // Camera tabs get `active` so only the visible one runs its camera.
     final body = IndexedStack(
+      key: _tabsKey,
       index: _tab,
       children: [
         BillScreen(active: _tab == 0),
@@ -77,6 +82,27 @@ class _AppShellState extends State<AppShell> {
     );
     void select(int i) => setState(() => _tab = i);
 
+    if (landscape) {
+      return Scaffold(
+        body: SafeArea(
+          child: Row(
+            children: [
+              NavigationRail(
+                selectedIndex: _tab,
+                onDestinationSelected: select,
+                labelType: NavigationRailLabelType.all,
+                destinations: [
+                  for (final t in tabs)
+                    NavigationRailDestination(icon: Icon(t.icon), selectedIcon: Icon(t.selected), label: Text(t.label)),
+                ],
+              ),
+              const VerticalDivider(width: 1),
+              Expanded(child: body),
+            ],
+          ),
+        ),
+      );
+    }
     return Scaffold(
       body: body,
       bottomNavigationBar: NavigationBar(
