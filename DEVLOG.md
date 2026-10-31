@@ -202,6 +202,14 @@ come back, and a fast-moving box lost its track (too little overlap) and restart
 
 ---
 
+## 15. Landscape control box colours — this commit
+- `camera_layout.dart`: the landscape box's dark theme was seeded from blue, which Material turns pale lavender;
+  now primary = GinLo blue, text white.
+- Learn: product chips have a white background in both layouts (dark text was unreadable on the dark box);
+  "New product" is blue on white, the OCR "Read: …" chip is yellow.
+
+---
+
 ## Backlog (planned, not built)
 - **Smoothing benchmark** (requested 31 Oct, after entry 7; extended after entry 9): the user builds a test set of
   scenes with known item counts; record ~5 s of raw per-frame results per scene (about how long a vendor waits

@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../ui/theme.dart';
+
 /// Camera screen layout that works however the phone is held:
 /// portrait -> camera on top, controls below in a panel you resize by dragging its handle (it scrolls);
 /// landscape -> camera fills the screen, controls float in a see-through box top-right
@@ -69,7 +71,13 @@ class _CameraLayoutState extends State<CameraLayout> {
 
     // Landscape: dark theme inside the floating box so text and sliders read on top of video.
     final dark = ThemeData(
-      colorScheme: ColorScheme.fromSeed(seedColor: Theme.of(context).colorScheme.primary, brightness: Brightness.dark),
+      // Seeded dark schemes turn buttons pale lavender: keep GinLo's solid blue with white text.
+      colorScheme: ColorScheme.fromSeed(seedColor: GinloColors.blue, brightness: Brightness.dark).copyWith(
+        primary: GinloColors.blue,
+        onPrimary: Colors.white,
+        secondaryContainer: GinloColors.blue,
+        onSecondaryContainer: Colors.white,
+      ),
       useMaterial3: true,
     );
     return Stack(

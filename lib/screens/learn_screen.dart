@@ -208,6 +208,7 @@ class _LearnViewState extends State<LearnView> {
                       showCheckmark: true,
                       checkmarkColor: Colors.white,
                       selectedColor: GinloColors.blue,
+                      backgroundColor: Colors.white, // same in portrait and the dark landscape box
                       labelStyle: TextStyle(
                         color: p.id == _productId ? Colors.white : GinloColors.ink,
                         fontWeight: p.id == _productId ? FontWeight.w700 : FontWeight.w500,
@@ -215,8 +216,12 @@ class _LearnViewState extends State<LearnView> {
                     ),
                   ),
                 ActionChip(
-                  avatar: const Icon(Icons.add, size: 18),
-                  label: const Text('New product'),
+                  backgroundColor: Colors.white,
+                  avatar: const Icon(Icons.add, size: 18, color: GinloColors.blue),
+                  label: const Text(
+                    'New product',
+                    style: TextStyle(color: GinloColors.blue, fontWeight: FontWeight.w600),
+                  ),
                   onPressed: () => _newProduct(name: _ocr?.name, price: _ocr?.price),
                 ),
               ],
@@ -227,7 +232,9 @@ class _LearnViewState extends State<LearnView> {
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
               child: ActionChip(
-                avatar: const Icon(Icons.document_scanner, size: 18),
+                backgroundColor: GinloColors.yellow,
+                labelStyle: const TextStyle(color: GinloColors.ink, fontWeight: FontWeight.w600),
+                avatar: const Icon(Icons.document_scanner, size: 18, color: GinloColors.ink),
                 label: Text(
                   'Read: ${_ocr!.name ?? '?'}${_ocr!.price != null ? ' · ₹${_ocr!.price!.toStringAsFixed(0)}' : ''} — Use',
                 ),
