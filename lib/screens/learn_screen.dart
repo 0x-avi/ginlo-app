@@ -10,6 +10,7 @@ import '../ml/embedder.dart';
 import '../ml/frame.dart';
 import '../ml/models.dart';
 import '../ml/vision.dart';
+import '../ui/theme.dart';
 import '../widgets/camera_feed.dart';
 import '../widgets/camera_layout.dart';
 import '../widgets/tag_painter.dart';
@@ -47,6 +48,7 @@ class LearnView extends StatefulWidget {
 
 class _LearnViewState extends State<LearnView> {
   List<Product> _products = [];
+  Map<int, int> _angleCounts = {}; // product id -> angles already saved
   int? _productId;
   VisionResult? _last;
   FrameData? _lastFrame; // the frame _last came from: Capture fingerprints it
@@ -56,8 +58,15 @@ class _LearnViewState extends State<LearnView> {
   final _captures = <({List<Float32List> vectors, Uint8List crop})>[];
   bool _saving = false, _capturing = false;
 
-  /// Enough sides to recognise a product reliably, without wasting the shopkeeper's time.
-  static const minCaptures = 6, maxCaptures = 8;
+  /// A product needs [minAngles] saved angles in total to be recognised reliably; one session takes
+  /// up to [maxCaptures]. A product that already has enough can get any number of extra angles.
+  static const minAngles = 6, maxCaptures = 8;
+
+  /// Captures still needed before Save (counting the angles this product already has).
+  int get _stillNeeded {
+    final have = _angleCounts[_productId] ?? 0;
+    return (minAngles - have - _captures.length).clamp(0, minAngles);
+  }
 
   @override
   void initState() {
@@ -67,8 +76,14 @@ class _LearnViewState extends State<LearnView> {
   }
 
   Future<void> _loadProducts() async {
-    final products = await (await AppDb.open()).products();
-    if (mounted) setState(() => _products = products);
+    final db = await AppDb.open();
+    final products = await db.products(), counts = await db.angleCounts(_embSpec.id);
+    if (mounted) {
+      setState(() {
+        _products = products;
+        _angleCounts = counts;
+      });
+    }
   }
 
   Future<void> _onFrame(FrameData frame) async {
@@ -116,6 +131,7 @@ class _LearnViewState extends State<LearnView> {
       _captures.clear();
       _saving = false;
     });
+    _loadProducts(); // refresh the angle counts on the chips
   }
 
   @override
@@ -142,22 +158,32 @@ class _LearnViewState extends State<LearnView> {
           overlay: CustomPaint(painter: TagPainter(tags)),
         ),
         panel: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-            child: Row(
+          // Which product: one chip each (with how many angles it already has); the selected one is filled.
+          SizedBox(
+            height: 52,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
               children: [
-                Expanded(
-                  child: DropdownButton<int>(
-                    value: _products.any((p) => p.id == _productId) ? _productId : null,
-                    hint: const Text('Which product?'),
-                    isExpanded: true,
-                    items: [for (final p in _products) DropdownMenuItem(value: p.id, child: Text(p.name))],
-                    onChanged: (id) => setState(() => _productId = id),
+                for (final p in _products)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: Text('${p.name} · ${_angleCounts[p.id] ?? 0}'),
+                      selected: p.id == _productId,
+                      onSelected: (_) => setState(() => _productId = p.id),
+                      showCheckmark: true,
+                      checkmarkColor: Colors.white,
+                      selectedColor: GinloColors.blue,
+                      labelStyle: TextStyle(
+                        color: p.id == _productId ? Colors.white : GinloColors.ink,
+                        fontWeight: p.id == _productId ? FontWeight.w700 : FontWeight.w500,
+                      ),
+                    ),
                   ),
-                ),
-                TextButton.icon(
-                  icon: const Icon(Icons.add),
-                  label: const Text('New'),
+                ActionChip(
+                  avatar: const Icon(Icons.add, size: 18),
+                  label: const Text('New product'),
                   onPressed: () async {
                     final id = await showProductDialog(context);
                     if (id == null) return;
@@ -176,7 +202,7 @@ class _LearnViewState extends State<LearnView> {
               padding: const EdgeInsets.all(6),
               children: [
                 if (_captures.isEmpty)
-                  const Center(child: Text('  Turn the product and tap Capture for each side: 6 to 8 sides')),
+                  const Center(child: Text('  Pick a product, turn it and tap Capture for each side')),
                 for (var i = 0; i < _captures.length; i++)
                   Padding(
                     padding: const EdgeInsets.only(right: 6),
@@ -214,9 +240,15 @@ class _LearnViewState extends State<LearnView> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: _productId == null || _captures.length < minCaptures || _saving ? null : _save,
+                    onPressed: _productId == null || _captures.isEmpty || _stillNeeded > 0 || _saving ? null : _save,
                     icon: const Icon(Icons.save),
-                    label: Text(_captures.length < minCaptures ? 'Save (need $minCaptures)' : 'Save'),
+                    label: Text(
+                      _productId == null
+                          ? 'Pick a product'
+                          : _stillNeeded > 0
+                          ? 'Save ($_stillNeeded more)'
+                          : 'Save',
+                    ),
                   ),
                 ),
               ],
