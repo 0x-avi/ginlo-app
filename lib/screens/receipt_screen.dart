@@ -8,13 +8,14 @@ import '../ui/theme.dart';
 
 /// Shown after a bill is paid: the final invoice, with Share (PDF) and New bill.
 class ReceiptScreen extends StatelessWidget {
-  const ReceiptScreen({super.key, required this.sale});
+  const ReceiptScreen({super.key, required this.sale, this.fromHistory = false});
   final Sale sale;
+  final bool fromHistory; // opened from Home's recent sales: show a back arrow
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Invoice #${sale.id}'), automaticallyImplyLeading: false),
+      appBar: AppBar(title: Text('Invoice #${sale.id}'), automaticallyImplyLeading: fromHistory),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
         children: [

@@ -6,11 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 
 import '../data/db.dart';
+import '../data/demo_sales.dart';
 import '../data/sales.dart';
 import '../ml/embedder.dart';
 import '../ml/models.dart';
 import '../ui/format.dart';
 import '../ui/theme.dart';
+import 'receipt_screen.dart';
 import 'shop_dialog.dart';
 
 /// Earnings dashboard (layout from the Ginlo mock-ups): store, total sales with chart, top item,
@@ -95,6 +97,24 @@ class _HomeScreenState extends State<HomeScreen> {
     if (picked != null) setState(() => _period = picked);
   }
 
+  Future<void> _addDemoSales() async {
+    final db = await AppDb.open();
+    final products = await db.products();
+    final sales = demoSales(products, DateTime.now());
+    await db.insertSales(sales);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            products.isEmpty
+                ? 'Teach a product first: demo sales use your products'
+                : 'Added ${sales.length} demo bills for ${products.length} products',
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -123,10 +143,22 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 12),
                   _RecentSalesCard(sales: d.stats.recent),
                 ] else
-                  const GinloCard(
-                    child: Text(
-                      'No sales in this period yet. Bills you mark as paid show up here.',
-                      style: TextStyle(color: GinloColors.muted),
+                  GinloCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'No sales in this period yet. Bills you mark as paid show up here.',
+                          style: TextStyle(color: GinloColors.muted),
+                        ),
+                        const SizedBox(height: 8),
+                        // For demos: a month of made-up bills for the products you've taught.
+                        OutlinedButton.icon(
+                          onPressed: _addDemoSales,
+                          icon: const Icon(Icons.auto_graph),
+                          label: const Text('Add demo sales (30 days)'),
+                        ),
+                      ],
                     ),
                   ),
               ],
@@ -543,6 +575,11 @@ class _RecentSalesCard extends StatelessWidget {
           for (final s in sales)
             ListTile(
               contentPadding: EdgeInsets.zero,
+              // Opens the bill's invoice (share as PDF from there).
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(builder: (_) => ReceiptScreen(sale: s, fromHistory: true)),
+              ),
               leading: _iconBubble(s.payment == 'Cash' ? Icons.payments_outlined : Icons.qr_code_2),
               title: Text(
                 s.lines.isEmpty

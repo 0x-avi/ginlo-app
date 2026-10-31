@@ -68,7 +68,7 @@ class _LiveBillState extends State<_LiveBill> {
   Map<String, int> _productIds = const {}; // product name -> id (to lower its stock when sold)
   bool _prodView = false;
 
-  static const _settingsKey = 'smoothing';
+  static const _settingsKey = 'smoothing_v2'; // v2: steadier defaults; old saved values ignored
 
   @override
   void initState() {
@@ -203,8 +203,8 @@ class _LiveBillState extends State<_LiveBill> {
                     'An item stays this many missed frames. Higher = less blinking, slower to clear.',
                     p.keepMissed.toDouble(),
                     0,
-                    6,
-                    6,
+                    12,
+                    12,
                     (v) => p.keepMissed = v.round(),
                   ),
                   knob(

@@ -20,26 +20,26 @@ class SteadyItem {
 /// Every knob of the smoothing, tunable live in the dev app (Bill → Smoothing settings).
 class SmoothSettings {
   /// Name = most common name over this many recent frames of an item.
-  int voteFrames = 4;
+  int voteFrames = 8;
 
   /// An item is shown only after it's been seen in this many frames (kills one-frame ghosts).
-  int showAfter = 2;
+  int showAfter = 3;
 
   /// An item survives this many frames in a row without being seen before it disappears.
-  int keepMissed = 2;
+  int keepMissed = 6;
 
   /// How far a box moves toward its new position each frame (0 = frozen, 1 = jumps).
-  double glide = 0.5;
+  double glide = 0.35;
 
   /// Two boxes in consecutive frames are the same item if they overlap at least this much (IoU).
-  double linkOverlap = 0.3;
+  double linkOverlap = 0.2;
 
   /// A shown box overlapping a bigger shown box at least this much is a duplicate and hidden
   /// (overlap = intersection / the smaller box's area, so a box fully inside another counts as 1).
   double mergeOverlap = 0.6;
 
   /// The item list shows each product's most common count over this many frames.
-  int countFrames = 5;
+  int countFrames = 10;
 
   Map<String, num> toJson() => {
     'voteFrames': voteFrames,
@@ -104,7 +104,9 @@ class FrameSmoother {
     final pairs = <(double, int, int)>[];
     for (var t = 0; t < _tracks.length; t++) {
       for (var s = 0; s < frame.length; s++) {
-        final o = _iou(_tracks[t].box, frame[s].box);
+        var o = _iou(_tracks[t].box, frame[s].box);
+        // Moved fast (little overlap) but its centre is still close and it's a similar size: same item.
+        if (o < p.linkOverlap && _near(_tracks[t].box, frame[s].box)) o = p.linkOverlap;
         if (o >= p.linkOverlap) pairs.add((o, t, s));
       }
     }
@@ -146,14 +148,15 @@ class FrameSmoother {
     return out;
   }
 
-  /// Most common name; ties go to the most recent.
+  /// Most common name; ties go to the most recent. An Unknown frame counts half, so one blurry
+  /// frame doesn't turn "Maggi" into Unknown.
   static String? _vote(List<String?> names) {
-    final counts = <String?, int>{};
+    final counts = <String?, double>{};
     for (final n in names) {
-      counts[n] = (counts[n] ?? 0) + 1;
+      counts[n] = (counts[n] ?? 0) + (n == null ? 0.5 : 1);
     }
     String? best;
-    var bestCount = 0;
+    var bestCount = 0.0;
     for (final n in names.reversed) {
       if (counts[n]! > bestCount) {
         best = n;
@@ -164,6 +167,13 @@ class FrameSmoother {
   }
 
   static double _area(Rect r) => r.width * r.height;
+
+  /// Centres within one box-length of each other and areas within 2× of each other.
+  static bool _near(Rect a, Rect b) {
+    final reach = [a.width, a.height, b.width, b.height].reduce((x, y) => x > y ? x : y);
+    final ratio = _area(a) / _area(b);
+    return (a.center - b.center).distance <= reach && ratio > 0.5 && ratio < 2;
+  }
 
   static double _iou(Rect a, Rect b) {
     final i = a.intersect(b);

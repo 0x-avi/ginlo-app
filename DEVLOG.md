@@ -166,6 +166,20 @@ old upgrade and can't be recovered.
 
 ---
 
+## 11. Steadier prod smoothing; demo sales and invoices on Home — this commit
+**Problem:** in prod, items still flickered: a box missed for 2 frames vanished and then needed 2 frames to
+come back, and a fast-moving box lost its track (too little overlap) and restarted.
+- `smoother.dart` defaults: keep through **6** missed frames (was 2), show after 3, name vote over 8 frames,
+  count hold 10, glide 0.35, link overlap 0.2.
+- A box with little overlap but a nearby centre and a similar size still links to its track (fast hand movement).
+- An Unknown frame counts half in the name vote.
+- Bill saves the settings under `smoothing_v2`, so values saved with the old jumpy defaults are ignored.
+  The dev slider for "keep through misses" now goes to 12.
+- Home: with no sales, an **Add demo sales (30 days)** button makes made-up bills from the products you've
+  taught (also in Products ⋮). Tapping a recent sale opens its **invoice** (share as PDF), now with a back arrow.
+
+---
+
 ## Backlog (planned, not built)
 - **Smoothing benchmark** (requested 31 Oct, after entry 7; extended after entry 9): the user builds a test set of
   scenes with known item counts; record ~5 s of raw per-frame results per scene (about how long a vendor waits
