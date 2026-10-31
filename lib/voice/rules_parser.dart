@@ -19,7 +19,12 @@ class RulesParser implements CommandParser {
     // "Maggi ka rate 14 kar, aur stock bhi bees kar dena" = two commands. Split into clauses and use
     // the split only when at least two clauses are complete commands on their own.
     final clauses = text.split(RegExp(r',|;| aur | and | और | par | but | पर ', caseSensitive: false));
-    if (clauses.length > 1) {
+    // "paanch... nahi chaar", "pehle 5 ka tha, ab 10": a correction, not two commands.
+    final correction = RegExp(
+      r'(?<![a-z])(nahi|nahin|not|actually|sorry|umm|pehle|matlab)(?![a-z])|नहीं',
+      caseSensitive: false,
+    ).hasMatch(text);
+    if (clauses.length > 1 && !correction) {
       final cmds = <Command>[];
       String? product;
       for (final c in clauses) {
@@ -27,7 +32,8 @@ class RulesParser implements CommandParser {
         if (r is _One && r.cmd.product != null) product = r.cmd.product;
         if (r is _One && r.complete) cmds.add(r.cmd);
       }
-      if (cmds.length >= 2) return Parsed.ready(cmds);
+      final distinct = {for (final c in cmds) '${c.tool}|${c.product}'}.length == cmds.length;
+      if (cmds.length >= 2 && distinct) return Parsed.ready(cmds);
     }
     return switch (whole) {
       _One(:final cmd) => _check(cmd),
@@ -72,8 +78,12 @@ class RulesParser implements CommandParser {
 
     if (has(_show) && has(_showVerb)) return _One(const Command(Tool.showCatalog), complete: true);
 
-    // A new product (from photos just taken): name + price (+ stock).
-    if (has(_createStrong)) return _Create(_create(text, tokens, nums));
+    // A new product (from photos just taken): name + price (+ stock). Also "Ye wala X hai, 40 rupaye,
+    // 18 bottle": a price AND a quantity with no stock verb describes a product, not an update.
+    final describes = nums.any((n) => _isPrice(tokens, n)) && nums.any((n) => _isStockNumber(tokens, n));
+    if (has(_createStrong) || (describes && !has(_stockChange) && !has(_add) && !has(_leftStrong))) {
+      return _Create(_create(text, tokens, nums, catalog));
+    }
 
     if (has(_deleteVerb) && (has(_productWord) || nums.isEmpty) && !has(_stockChange)) {
       return _One(Command(Tool.deleteProduct, product: product), complete: product != null);
@@ -99,7 +109,7 @@ class RulesParser implements CommandParser {
         complete: product != null,
       );
     }
-    if (priceTalk && !has(_remove) && !has(_add) && !has(_left)) {
+    if (priceTalk && !has(_remove) && !has(_add) && !has(_leftStrong)) {
       return _One(
         Command(Tool.setPrice, product: product, price: last),
         complete: product != null && last != null,
@@ -117,7 +127,7 @@ class RulesParser implements CommandParser {
         complete: last != null,
       );
     }
-    if (has(_zero) && last == null) return _One(Command(Tool.setStock, product: product, qty: 0), complete: true);
+    if (has(_zero)) return _One(Command(Tool.setStock, product: product, qty: 0), complete: true);
     if (last != null) {
       return _One(
         Command(Tool.setStock, product: product, qty: last),
@@ -148,7 +158,7 @@ class RulesParser implements CommandParser {
 
   // ------------------------------------------------------------ create
 
-  Parsed _create(String text, List<String> tokens, List<({int value, int start, int end})> nums) {
+  Parsed _create(String text, List<String> tokens, List<({int value, int start, int end})> nums, List<String> catalog) {
     num? price, qty;
     for (final n in nums) {
       if (_isStockNumber(tokens, n)) {
@@ -159,7 +169,8 @@ class RulesParser implements CommandParser {
         qty ??= n.value;
       }
     }
-    final name = _newProductName(text);
+    // A product the catalog already has keeps its catalog name (saving it again updates it).
+    final name = _matchCatalog(text, catalog) ?? _newProductName(text) ?? _leftoverName(tokens);
     if (name == null) return const Parsed.ask('Product ka naam kya hai?');
     if (price == null) return Parsed.ask('$name ka price kya rakhein?');
     return Parsed.ready([Command(Tool.createProduct, product: name, price: price, qty: qty)]);
@@ -172,6 +183,7 @@ class RulesParser implements CommandParser {
       r'naam\s+(?:hai\s+)?([^,.।]+?)(?:,|\.|।|$)',
       r'name is\s+([^,.]+)',
       r'isko\s+(.+?)\s+(?:bolke|bol ke|ke naam)',
+      r'(?:picture|photo)\s+(?:liya|li|kiya)[^,]*,\s*([^,]+?)\s*,',
       r'(?:save (?:this one|the pictures|these shots)?\s*(?:to catalog\s*)?as|add these shots to catalog as)\s+([^,.]+)',
       r'(?:this (?:new )?(?:one|item)(?: we photographed)?|it.s|this new item)\s+is\s+([^,.]+)',
       r'(?:ye|yeh|ye wala|yeh wala|picture wali ye|picture wali|photo wala ye|photo wali)\s+(?:naya\s+|nayi\s+)?(.+?)\s+(?:hai|,)',
@@ -186,6 +198,20 @@ class RulesParser implements CommandParser {
       }
     }
     return null;
+  }
+
+  /// Fallback: the words that are left after removing fillers, numbers and command words.
+  static String? _leftoverName(List<String> tokens) {
+    final nums = {
+      for (final n in numberSpans(tokens))
+        for (var i = n.start; i <= n.end; i++) i,
+    };
+    final words = [
+      for (var i = 0; i < tokens.length; i++)
+        if (!nums.contains(i) && !_nameFiller.contains(tokens[i]) && !_leftoverStop.contains(tokens[i])) tokens[i],
+    ];
+    final name = _cleanName(words.join(' '));
+    return name.isEmpty ? null : name;
   }
 
   /// Strips filler words and prices from a captured name; keeps sizes ("Colgate 100g").
@@ -235,22 +261,87 @@ class RulesParser implements CommandParser {
   /// Ignores case, spaces and dashes ("parle g" = "Parle-G"), allows small spelling slips by
   /// comparing consonants ("Dabar honey" = "Dabur Honey", "Maza" = "Maaza").
   static String? _matchCatalog(String text, List<String> catalog) {
-    final flat = _flat(text);
-    final skel = _skeleton(text);
+    final prepared = _prepare(text);
+    // 1. Exact, ignoring case/spaces/dashes. Longest wins.
+    final flat = _flat(prepared);
     String? best;
     for (final name in catalog) {
-      final key = _flat(name);
-      final hit = key.isNotEmpty && (flat.contains(key) || (key.length >= 4 && skel.contains(_skeleton(name))));
-      if (hit && (best == null || key.length > _flat(best).length)) best = name;
+      final key = _flat(_prepare(name));
+      if (key.isNotEmpty && flat.contains(key) && (best == null || key.length > _flat(best).length)) best = name;
+    }
+    if (best != null) return best;
+    // 2. All the product's words appear, in any order ("500ml coke" = "Coke 500ml").
+    final words = tokenize(prepared).toSet();
+    var bestWords = 0;
+    for (final name in catalog) {
+      final nameWords = tokenize(_prepare(name));
+      if (nameWords.isNotEmpty && nameWords.every(words.contains) && nameWords.length > bestWords) {
+        best = name;
+        bestWords = nameWords.length;
+      }
+    }
+    if (best != null) return best;
+    // 3. Spelling slips, word by word: the product's words' consonant skeletons must equal a run of
+    //    the same number of words in the text ("dabar honey" ~ "Dabur Honey", "हल्दीराम" ~ "Haldiram").
+    //    Very short skeletons are too vague to trust ("Tata Tea" -> "t").
+    final list = tokenize(prepared);
+    for (final name in catalog) {
+      final nameTokens = tokenize(_prepare(name));
+      final nameSkel = nameTokens.map(_skeleton).join(' ');
+      final letters = nameSkel.replaceAll(' ', '').length;
+      if (letters < 3 && !(nameTokens.length == 1 && name.length >= 4 && letters == 2)) continue;
+      final n = nameTokens.length;
+      for (var k = 0; k + n <= list.length; k++) {
+        if (list.sublist(k, k + n).map(_skeleton).join(' ') == nameSkel &&
+            (best == null || name.length > best.length)) {
+          best = name;
+        }
+      }
     }
     return best;
+  }
+
+  /// Text made comparable with catalog names: Hindi product words in English, sizes joined
+  /// ("500 ml" -> "500ml"), small/large words unified, Devanagari spelled in Latin letters.
+  static String _prepare(String s) {
+    var t = ' ${s.toLowerCase()} ';
+    _hindiWords.forEach((hi, en) => t = t.replaceAll(hi, ' $en '));
+    t = t.replaceAllMapped(
+      RegExp(r'(\d+)\s*-?\s*(ml|millilitre|litre|liter|ltr|l|grams|gram|gm|g|kg|ग्राम|लीटर)(?![a-z])'),
+      (m) => ' ${m[1]}${_unitShort[m[2]] ?? m[2]} ',
+    );
+    t = t.replaceAllMapped(RegExp(r'(?<![a-z])(one|ek)\s*-?\s*(litre|liter)(?![a-z])'), (_) => ' 1l ');
+    for (final e in _latinWords.entries) {
+      t = t.replaceAll(RegExp('(?<![a-z])${e.key}(?![a-z])'), e.value);
+    }
+    return _transliterate(t);
+  }
+
+  /// Rough Devanagari -> Latin (enough for consonant-skeleton matching, not for display).
+  static String _transliterate(String s) {
+    final b = StringBuffer();
+    for (final ch in s.split('')) {
+      b.write(_devanagari[ch] ?? ch);
+    }
+    return b.toString();
   }
 
   static String _flat(String s) => s.toLowerCase().replaceAll(RegExp(r'[^a-z0-9ऀ-ॿ]'), '');
 
   /// Letters without vowels and repeats: "maaza" -> "mz", "dabur honey" -> "dbrhn".
-  static String _skeleton(String s) =>
-      _flat(s).replaceAll(RegExp(r'[aeiouy]'), '').replaceAllMapped(RegExp(r'(.)\1+'), (m) => m[1]!);
+  static String _skeleton(String s) {
+    var t = _flat(s)
+        .replaceAll('ph', 'f')
+        .replaceAll('x', 'ks')
+        .replaceAll('w', 'v')
+        .replaceAll('q', 'k')
+        .replaceAllMapped(RegExp(r'c(?=[eiy])'), (_) => 's') // "juice", "excel"
+        .replaceAll('ch', 'C')
+        .replaceAll('c', 'k')
+        .replaceAll('C', 'ch');
+    t = t.replaceAll(RegExp(r'[aeiouyh]'), '');
+    return t.replaceAllMapped(RegExp(r'(.)\1+'), (m) => m[1]!);
+  }
 
   /// Whole-word match for Latin words; substring for Devanagari (words there join with matras).
   static bool _contains(String low, String word) {
@@ -259,6 +350,108 @@ class RulesParser implements CommandParser {
   }
 
   // ------------------------------------------------------------ word lists
+
+  /// Hindi product words -> the English used in catalogs.
+  static const _hindiWords = {
+    'दूध': 'milk',
+    'नमक': 'salt',
+    'चीनी': 'sugar',
+    'चावल': 'rice',
+    'शहद': 'honey',
+    'तेल': 'oil',
+    'साबुन': 'soap',
+    'चायपत्ती': 'tea',
+    'चाय पत्ती': 'tea',
+    'चाय': 'tea',
+    'आटा': 'atta',
+    'अंडे': 'eggs',
+    'ब्रेड': 'bread',
+  };
+  static const _latinWords = {
+    'doodh': 'milk',
+    'dudh': 'milk',
+    'namak': 'salt',
+    'sabun': 'soap',
+    'saabun': 'soap',
+    'chai patti': 'tea',
+    'chaipatti': 'tea',
+    'chai': 'tea',
+    'cheeni': 'sugar',
+    'chini': 'sugar',
+    'chawal': 'rice',
+    'chaval': 'rice',
+    'shahad': 'honey',
+    'tel': 'oil',
+    'aata': 'atta',
+    'ande': 'eggs',
+    'chhoti': 'small',
+    'choti': 'small',
+    'chhota': 'small',
+    'chota': 'small',
+    'badi': 'large',
+    'bada': 'large',
+    'tikki': 'bar',
+  };
+  static const _devanagari = {
+    'अ': 'a',
+    'आ': 'aa',
+    'इ': 'i',
+    'ई': 'ee',
+    'उ': 'u',
+    'ऊ': 'oo',
+    'ए': 'e',
+    'ऐ': 'ai',
+    'ओ': 'o',
+    'औ': 'au',
+    'क': 'k',
+    'ख': 'kh',
+    'ग': 'g',
+    'घ': 'gh',
+    'च': 'ch',
+    'छ': 'chh',
+    'ज': 'j',
+    'झ': 'jh',
+    'ट': 't',
+    'ठ': 'th',
+    'ड': 'd',
+    'ढ': 'dh',
+    'ण': 'n',
+    'त': 't',
+    'थ': 'th',
+    'द': 'd',
+    'ध': 'dh',
+    'न': 'n',
+    'प': 'p',
+    'फ': 'f',
+    'ब': 'b',
+    'भ': 'bh',
+    'म': 'm',
+    'य': 'y',
+    'र': 'r',
+    'ल': 'l',
+    'व': 'v',
+    'श': 'sh',
+    'ष': 'sh',
+    'स': 's',
+    'ह': 'h',
+    'ा': 'a',
+    'ि': 'i',
+    'ी': 'ee',
+    'ु': 'u',
+    'ू': 'oo',
+    'े': 'e',
+    'ै': 'ai',
+    'ो': 'o',
+    'ौ': 'au',
+    'ं': 'n',
+    'ँ': 'n',
+    '्': '',
+    'ृ': 'ri',
+    'ड़': 'r',
+    'ज़': 'z',
+    'फ़': 'f',
+    'क़': 'k',
+  };
 
   static const _show = [
     'list',
@@ -457,7 +650,28 @@ class RulesParser implements CommandParser {
     'hain',
     'hai',
   ];
-  static const _zero = ['khatam', 'zero', 'ek bhi nahi', 'nahi bacha'];
+  static const _zero = ['khatam', 'zero', 'ek bhi nahi', 'ek bhi bottle nahi', 'nahi bacha', 'ek bhi nahin'];
+  static const _leftStrong = [
+    'bach',
+    'bache',
+    'bachi',
+    'bacha',
+    'reh gaye',
+    'reh gaya',
+    'reh gayi',
+    'left',
+    'remaining',
+    'pade',
+    'pada',
+    'available',
+    'बचे',
+    'बची',
+    'बचा',
+    'निकलीं',
+    'on the shelf',
+    'stock',
+    'स्टॉक',
+  ];
   static const _stockWord = ['stock', 'स्टॉक', 'count', 'quantity'];
   static const _stockChange = [
     'bik',
@@ -544,6 +758,77 @@ class RulesParser implements CommandParser {
     'tubes',
     'bags',
   };
+  static const _leftoverStop = {
+    'abhi',
+    'jo',
+    'photo',
+    'picture',
+    'li',
+    'liya',
+    'click',
+    'kiya',
+    'clicked',
+    'hai',
+    'hain',
+    'ka',
+    'ki',
+    'ke',
+    'rupaye',
+    'rupees',
+    'rs',
+    '₹',
+    'packet',
+    'packets',
+    'bottle',
+    'bottles',
+    'piece',
+    'pieces',
+    'stock',
+    'price',
+    'just',
+    'it',
+    's',
+    'this',
+    'one',
+    'we',
+    'photographed',
+    'boxes',
+    'each',
+    'na',
+    'woh',
+    'bhai',
+    'haan',
+    'naya',
+    'nayi',
+    'item',
+    'save',
+    'add',
+    'dikhaya',
+    'pade',
+    'rakhe',
+    'qty',
+    'quantity',
+    'total',
+    'mein',
+    'aur',
+    'ab',
+    'wala',
+    'wali',
+    'ye',
+    'yeh',
+    'the',
+    'is',
+    'of',
+    'them',
+    'i',
+    've',
+    'got',
+    'register',
+    'kar',
+    'do',
+    'dena',
+  };
+
   static const _nameFiller = {
     'naya',
     'nayi',

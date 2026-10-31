@@ -197,7 +197,7 @@ List<({int value, int start, int end})> numberSpans(List<String> tokens) {
   for (var i = 0; i < tokens.length; i++) {
     final t = tokens[i];
     // Hinglish "do" is also "please do it": "kam kar do", "hata do" - not the number 2 there.
-    if (t == 'do' && (i == tokens.length - 1 || (i > 0 && _verbsBeforeDo.contains(tokens[i - 1])))) {
+    if ((t == 'do' || t == 'दो') && (i == tokens.length - 1 || (i > 0 && _verbsBeforeDo.contains(tokens[i - 1])))) {
       flush();
       continue;
     }
