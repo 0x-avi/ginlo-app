@@ -6,6 +6,7 @@ import 'screens/catalog_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/lab_screen.dart';
 import 'screens/learn_screen.dart';
+import 'ui/theme.dart';
 
 void main() {
   // Any orientation: CameraFeed turns each frame to match how the phone is held.
@@ -21,11 +22,7 @@ class GinLoApp extends StatelessWidget {
     return MaterialApp(
       title: 'GinLo',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        // One seed colour; Material 3 derives the whole palette from it.
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF00BAF2)), // Paytm blue
-        useMaterial3: true,
-      ),
+      theme: ginloTheme(), // colours from the Ginlo logo, see ui/theme.dart
       home: const AppShell(),
     );
   }
@@ -37,7 +34,7 @@ typedef _Tab = ({IconData icon, IconData selected, String label});
 const List<_Tab> _tabs = [
   (icon: Icons.receipt_long_outlined, selected: Icons.receipt_long, label: 'Bill'),
   (icon: Icons.home_outlined, selected: Icons.home, label: 'Home'),
-  (icon: Icons.inventory_2_outlined, selected: Icons.inventory_2, label: 'Catalog'),
+  (icon: Icons.inventory_2_outlined, selected: Icons.inventory_2, label: 'Products'),
   (icon: Icons.school_outlined, selected: Icons.school, label: 'Learn'),
   (icon: Icons.science_outlined, selected: Icons.science, label: 'Lab'), // dev only
 ];

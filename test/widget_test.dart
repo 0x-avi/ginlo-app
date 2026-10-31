@@ -17,7 +17,7 @@ void main() {
     await tester.pump(); // no camera or database in tests, so don't wait for them to settle
     expect(find.text('New bill'), findsOneWidget);
     expect(find.byType(NavigationBar), findsOneWidget);
-    for (final tab in ['Bill', 'Home', 'Catalog', 'Learn', 'Lab']) {
+    for (final tab in ['Bill', 'Home', 'Products', 'Learn', 'Lab']) {
       expect(find.text(tab), findsWidgets); // tests run as the dev flavor, so Lab is there
     }
 

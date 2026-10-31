@@ -16,7 +16,7 @@ class CatalogScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Catalog'), actions: const [_UpgradeAnglesButton()]),
+      appBar: AppBar(title: const Text('Products'), actions: const [_UpgradeAnglesButton()]),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => showProductDialog(context),
         icon: const Icon(Icons.add),
