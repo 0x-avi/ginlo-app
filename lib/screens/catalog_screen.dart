@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/db.dart';
+import '../data/demo_sales.dart';
 import '../ml/embedder.dart';
 import '../ml/models.dart';
 import '../ml/vision.dart';
@@ -16,7 +17,7 @@ class CatalogScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Products'), actions: const [_UpgradeAnglesButton()]),
+      appBar: AppBar(title: const Text('Products'), actions: const [_UpgradeAnglesButton(), _CatalogMenu()]),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => showProductDialog(context),
         icon: const Icon(Icons.add),
@@ -272,6 +273,62 @@ class _UpgradeAnglesButtonState extends State<_UpgradeAnglesButton> {
           );
         },
       ),
+    );
+  }
+}
+
+/// ⋮ menu: move the catalog between the dev and shop apps, and fill a month of demo sales.
+class _CatalogMenu extends StatelessWidget {
+  const _CatalogMenu();
+
+  void _say(BuildContext context, String text) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text), duration: const Duration(seconds: 6)));
+
+  Future<void> _run(BuildContext context, String action) async {
+    final db = await AppDb.open();
+    try {
+      switch (action) {
+        case 'export':
+          final path = await db.exportCatalog();
+          if (context.mounted) _say(context, 'Catalog saved to $path');
+        case 'import':
+          final r = await db.importCatalog();
+          if (context.mounted) _say(context, 'Imported ${r.products} products and ${r.captures} taught angles');
+        case 'demo':
+          if (!context.mounted) return;
+          final ok = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Add demo sales?'),
+              content: const Text(
+                'Adds a month of made-up bills for the products in your catalog, so Home has '
+                'something to show. Stock is not changed.',
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Add')),
+              ],
+            ),
+          );
+          if (ok != true) return;
+          final sales = demoSales(await db.products(), DateTime.now());
+          await db.insertSales(sales);
+          if (context.mounted) _say(context, 'Added ${sales.length} demo bills over the last 30 days');
+      }
+    } catch (e) {
+      if (context.mounted) _say(context, '$e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<String>(
+      onSelected: (a) => _run(context, a),
+      itemBuilder: (_) => const [
+        PopupMenuItem(value: 'export', child: Text('Export catalog')),
+        PopupMenuItem(value: 'import', child: Text('Import catalog')),
+        PopupMenuItem(value: 'demo', child: Text('Add demo sales (30 days)')),
+      ],
     );
   }
 }

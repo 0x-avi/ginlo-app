@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show ValueNotifier;
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../ml/matcher.dart';
@@ -279,6 +281,74 @@ class AppDb {
         Sale.linesFromJson(r['items_json'] as String),
       ),
   ];
+
+  /// Saves bills with their own timestamps, without touching stock (used for demo data).
+  Future<void> insertSales(List<Sale> sales) async {
+    await db.transaction((tx) async {
+      for (final x in sales) {
+        await tx.insert('sales', {
+          'ts': x.time.toIso8601String(),
+          'total': x.total,
+          'items_json': Sale.linesToJson(x.lines),
+          'payment': x.payment,
+        });
+      }
+    });
+    _changed();
+  }
+
+  // ------------------------------------------------------------ catalog export / import
+  //
+  // The dev and prod apps are separate installs with separate databases. Export writes the
+  // catalog (products + taught fingerprints) to a file; import merges such a file into this app.
+
+  /// Folder both apps can be given files in (`Android/data/<app>/files` on the phone storage).
+  static Future<String> exchangeDir() async =>
+      (await getExternalStorageDirectory() ?? await getApplicationDocumentsDirectory()).path;
+
+  static const exchangeFile = 'ginlo_catalog.db';
+
+  /// Writes a copy of the whole database (VACUUM INTO = SQLite's "save a compact copy").
+  Future<String> exportCatalog() async {
+    final path = p.join(await exchangeDir(), exchangeFile);
+    final f = File(path);
+    if (await f.exists()) await f.delete();
+    await db.execute('VACUUM INTO ?', [path]);
+    return path;
+  }
+
+  /// Merges products + fingerprints from an exported file. Products already here (same name) keep
+  /// their price/stock; captures already imported are skipped, so importing twice is harmless.
+  Future<({int products, int captures})> importCatalog() async {
+    final path = p.join(await exchangeDir(), exchangeFile);
+    if (!await File(path).exists()) throw StateError('No $exchangeFile in ${await exchangeDir()}');
+    final before = await _counts();
+    await db.execute('ATTACH DATABASE ? AS src', [path]);
+    try {
+      await db.execute(
+        'INSERT OR IGNORE INTO products(name, price, stock, family) SELECT name, price, stock, family FROM src.products',
+      );
+      await db.execute('''
+        INSERT INTO embeddings(product_id, model, vector, crop, capture, variant)
+        SELECT p.id, e.model, e.vector, e.crop, e.capture, e.variant
+        FROM src.embeddings e
+        JOIN src.products sp ON sp.id = e.product_id
+        JOIN products p ON p.name = sp.name
+        WHERE e.capture IS NULL OR e.capture NOT IN (SELECT capture FROM embeddings WHERE capture IS NOT NULL)''');
+    } finally {
+      await db.execute('DETACH DATABASE src');
+    }
+    final after = await _counts();
+    _changed();
+    return (products: after.products - before.products, captures: after.captures - before.captures);
+  }
+
+  Future<({int products, int captures})> _counts() async {
+    final r = await db.rawQuery(
+      'SELECT (SELECT COUNT(*) FROM products) AS p, (SELECT COUNT(DISTINCT capture) FROM embeddings) AS c',
+    );
+    return (products: r.first['p'] as int, captures: r.first['c'] as int);
+  }
 
   // ------------------------------------------------------------ shop (name + UPI ID for the QR)
 
