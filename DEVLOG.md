@@ -189,6 +189,12 @@ come back, and a fast-moving box lost its track (too little overlap) and restart
 
 ---
 
+## 13. Capture button white on blue — this commit
+- Learn: Capture was a "tonal" button (dark text on pale blue); now solid blue with white text, also while capturing.
+- Published: public repo github.com/0x-avi/ginlo-app, APK as release `v1.0-demo`.
+
+---
+
 ## Backlog (planned, not built)
 - **Smoothing benchmark** (requested 31 Oct, after entry 7; extended after entry 9): the user builds a test set of
   scenes with known item counts; record ~5 s of raw per-frame results per scene (about how long a vendor waits

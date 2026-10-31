@@ -271,7 +271,14 @@ class _LearnViewState extends State<LearnView> {
             child: Row(
               children: [
                 Expanded(
-                  child: FilledButton.tonalIcon(
+                  child: FilledButton.icon(
+                    // White on blue, also while capturing (no dark text on a pale button).
+                    style: FilledButton.styleFrom(
+                      backgroundColor: GinloColors.blue,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: GinloColors.blue.withValues(alpha: 0.7),
+                      disabledForegroundColor: Colors.white,
+                    ),
                     onPressed: _capturing ? null : _tryCapture,
                     icon: const Icon(Icons.camera),
                     label: Text(_capturing ? 'Capturing…' : 'Capture ${_captures.length}/$maxCaptures'),
