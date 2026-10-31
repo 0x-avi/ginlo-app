@@ -2,31 +2,31 @@ import 'package:flutter/material.dart';
 
 import '../dev/perf_log.dart';
 
-/// Dev-only tab: average detection time per frame for every model you've run on the Bill tab.
-class LogsScreen extends StatelessWidget {
-  const LogsScreen({super.key});
+/// Dev-only: average time per frame for every model setup that has run (Bill, Learn, Lab).
+class LogsView extends StatelessWidget {
+  const LogsView({super.key});
 
   @override
   Widget build(BuildContext context) {
     final log = PerfLog.instance;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Logs · detection speed'),
-        actions: [IconButton(tooltip: 'Clear', icon: const Icon(Icons.delete_outline), onPressed: log.clear)],
-      ),
-      // Rebuilds whenever a new detection is recorded.
-      body: ListenableBuilder(
-        listenable: log,
-        builder: (context, _) {
-          if (log.stats.isEmpty) {
-            return const Center(child: Text('Run a model on the Bill tab; its timings show up here.'));
-          }
-          return ListView(
-            padding: const EdgeInsets.all(12),
-            children: [for (final e in log.stats.entries) _ModelCard(e.key, e.value)],
-          );
-        },
-      ),
+    // Rebuilds whenever a new frame is recorded.
+    return ListenableBuilder(
+      listenable: log,
+      builder: (context, _) {
+        if (log.stats.isEmpty) {
+          return const Center(child: Text('Run a model on Bill, Learn or the Lab; its timings show up here.'));
+        }
+        return ListView(
+          padding: const EdgeInsets.all(12),
+          children: [
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(onPressed: log.clear, icon: const Icon(Icons.delete_outline), label: const Text('Clear')),
+            ),
+            for (final e in log.stats.entries) _ModelCard(e.key, e.value),
+          ],
+        );
+      },
     );
   }
 }
@@ -56,7 +56,11 @@ class _ModelCard extends StatelessWidget {
             _row('Prepare (YUV→RGB, rotate, letterbox)', ms(s.avgPre)),
             _row('Model (TFLite inference)', ms(s.avgInfer)),
             _row('Boxes (decode + NMS)', ms(s.avgPost)),
-            _row('Overhead (isolate start, copying)', ms(s.avgWall - s.avgPre - s.avgInfer - s.avgPost)),
+            if (s.embedCount > 0)
+              _row('Embed (${(s.embedCount / s.frames).toStringAsFixed(1)} crops, '
+                  '${s.embedPerCrop.toStringAsFixed(0)} ms each)', ms(s.avgEmbed)),
+            _row('Overhead (isolate start, copying)',
+                ms(s.avgWall - s.avgPre - s.avgInfer - s.avgPost - s.avgEmbed)),
           ],
         ),
       ),
