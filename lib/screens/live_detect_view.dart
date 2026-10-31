@@ -1,6 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
+import '../dev/perf_log.dart';
 import '../ml/detector.dart';
 
 /// Dev tool: live camera with every detector box, its class and confidence drawn on top.
@@ -14,8 +15,10 @@ class LiveDetectView extends StatefulWidget {
   State<LiveDetectView> createState() => _LiveDetectViewState();
 }
 
-class _LiveDetectViewState extends State<LiveDetectView> {
+// WidgetsBindingObserver: tells us when the app goes to the background / comes back.
+class _LiveDetectViewState extends State<LiveDetectView> with WidgetsBindingObserver {
   CameraController? _camera;
+  bool _cameraStarting = false;
   Detector? _detector;
   DetectorSpec _spec = detectorSpecs.first;
   double _conf = 0.25;
@@ -28,12 +31,23 @@ class _LiveDetectViewState extends State<LiveDetectView> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _start();
   }
 
   Future<void> _start() async {
     try {
       _detector = await Detector.load(_spec);
+    } catch (e) {
+      if (mounted) setState(() => _error = '$e');
+    }
+    await _startCamera();
+  }
+
+  Future<void> _startCamera() async {
+    if (_camera != null || _cameraStarting) return;
+    _cameraStarting = true;
+    try {
       final back = (await availableCameras()).firstWhere((c) => c.lensDirection == CameraLensDirection.back);
       final cam = CameraController(back, ResolutionPreset.high,
           enableAudio: false, imageFormatGroup: ImageFormatGroup.yuv420);
@@ -43,6 +57,23 @@ class _LiveDetectViewState extends State<LiveDetectView> {
       setState(() => _camera = cam);
     } catch (e) {
       if (mounted) setState(() => _error = '$e');
+    } finally {
+      _cameraStarting = false;
+    }
+  }
+
+  /// The camera plugin doesn't handle this itself: Android takes the camera away when the
+  /// phone locks or the app is backgrounded, so release it then and start it again on return.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
+      final cam = _camera;
+      if (cam != null) {
+        setState(() => _camera = null);
+        cam.dispose();
+      }
+    } else if (state == AppLifecycleState.resumed) {
+      _startCamera();
     }
   }
 
@@ -50,7 +81,9 @@ class _LiveDetectViewState extends State<LiveDetectView> {
     final detector = _detector;
     if (_busy || detector == null) return; // still working on the previous frame
     _busy = true;
+    final wall = Stopwatch()..start();
     detector.detect(FrameData(img, rotation), conf: _conf).then((r) {
+      PerfLog.instance.record(detector.spec.title, r, wall.elapsedMilliseconds);
       if (!mounted) return;
       final now = DateTime.now().millisecondsSinceEpoch;
       _frameTimes
@@ -86,6 +119,7 @@ class _LiveDetectViewState extends State<LiveDetectView> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _camera?.dispose();
     // Closing the model while a background isolate is using it would crash; if a frame is
     // in flight, _onFrame closes it when that frame finishes.

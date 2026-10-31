@@ -14,5 +14,10 @@ void main() {
     await tester.tap(find.text('Catalog'));
     await tester.pumpAndSettle();
     expect(find.text('Your products will show here'), findsOneWidget);
+
+    // Tests run as the dev flavor, so the Logs tab is there
+    await tester.tap(find.text('Logs'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Run a model on the Bill tab'), findsOneWidget);
   });
 }

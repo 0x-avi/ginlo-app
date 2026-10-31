@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'config.dart';
 import 'screens/bill_screen.dart';
 import 'screens/catalog_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/logs_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,17 +53,24 @@ class _AppShellState extends State<AppShell> {
       // (e.g. a half-finished bill survives a quick look at the catalog).
       body: IndexedStack(
         index: _tab,
-        children: [const HomeScreen(), BillScreen(active: _tab == 1), const CatalogScreen()],
+        children: [
+          const HomeScreen(),
+          BillScreen(active: _tab == 1),
+          const CatalogScreen(),
+          if (isDev) const LogsScreen(),
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
         onDestinationSelected: (i) => setState(() => _tab = i),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
-          NavigationDestination(
+        destinations: [
+          const NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
+          const NavigationDestination(
               icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: 'Bill'),
-          NavigationDestination(
+          const NavigationDestination(
               icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: 'Catalog'),
+          if (isDev)
+            const NavigationDestination(icon: Icon(Icons.timer_outlined), selectedIcon: Icon(Icons.timer), label: 'Logs'),
         ],
       ),
     );
