@@ -159,3 +159,11 @@ old upgrade and can't be recovered.
   replay that recording through many `SmoothSettings` combinations offline — replaying is instant (no model runs),
   so one recording tests every combination. Pick the best, make it the prod default. Repeat per use case
   (spread out, crowded, stacked, mixed lighting) and keep the scores in this log.
+- **Teach from a 5-second video** (requested 31 Oct, after entry 9): instead of tapping Capture 6 times, record ~5 s
+  while turning the product; the app picks the frames itself. Plan:
+  1. While recording, take the biggest box each frame (as Learn does now), skip blurry frames (sharpness check).
+  2. **Skip near-duplicates cheaply** with a tiny "thumbnail fingerprint" (crop downscaled to e.g. 16×16 grey,
+     compared by difference) — before running the embedder — so similar views aren't saved twice.
+  3. Also compare each candidate with the product's **already saved** angles (thumbnail first, then embedding);
+     keep only views that add something new, up to ~8.
+  4. Each kept frame gets the 8 teach variants as today; show the picked frames so bad ones can still be removed.
