@@ -66,8 +66,20 @@ class CatalogScreen extends StatelessWidget {
 }
 
 /// Add-product dialog (name, price, stock). Returns the new product's id, or null if cancelled.
-Future<int?> showProductDialog(BuildContext context) {
-  final name = TextEditingController(), price = TextEditingController(), stock = TextEditingController();
+/// [name] / [price] prefill the fields (e.g. read from the pack by OCR in Learn).
+Future<int?> showProductDialog(BuildContext context, {String? name, double? price}) {
+  final nameC = TextEditingController(text: name ?? ''),
+      priceC = TextEditingController(text: price == null ? '' : price.toStringAsFixed(price % 1 == 0 ? 0 : 2)),
+      stock = TextEditingController();
+  return _productDialog(context, nameC, priceC, stock);
+}
+
+Future<int?> _productDialog(
+  BuildContext context,
+  TextEditingController name,
+  TextEditingController price,
+  TextEditingController stock,
+) {
   return showDialog<int>(
     context: context,
     builder: (ctx) => AlertDialog(

@@ -152,6 +152,20 @@ old upgrade and can't be recovered.
 
 ---
 
+## 10. Demo build: OCR autofill in Learn, clearer buttons, Bill inside the tab bar — this commit
+- `voice/ocr.dart` (new, ML Kit text recognition, on-device): `readLabel(jpeg)` reads the product's label;
+  `guessLabel()` takes the price after MRP/₹/Rs/INR and the name from the tallest wordy line.
+- `vision.embedVariants` also returns `ocr`: a full-resolution crop (up to 2000 px) so small print is readable.
+- Learn: after a capture, a chip "Read: name · ₹price — Use" prefills the New product dialog
+  (`showProductDialog(context, name:, price:)`). Nothing is filled in when the label can't be read.
+- Learn: Capture / Save stay in full colour; tapping one too early shows a hint instead of grey disabled text.
+- Tab bar: the round Bill button now sits inside the bar (was a docked FAB that overlapped Modify and the tabs).
+- `proguard-rules.pro`: `-dontwarn com.google.mlkit.vision.text.**` (R8 failed on the unused non-Latin scripts).
+
+**How it went:** prod release 75 MB (arm64), installed; the tab bar shows no overlap. Evals deferred until after the demo.
+
+---
+
 ## Backlog (planned, not built)
 - **Smoothing benchmark** (requested 31 Oct, after entry 7; extended after entry 9): the user builds a test set of
   scenes with known item counts; record ~5 s of raw per-frame results per scene (about how long a vendor waits

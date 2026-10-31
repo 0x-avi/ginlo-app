@@ -11,6 +11,7 @@ import '../ml/frame.dart';
 import '../ml/models.dart';
 import '../ml/vision.dart';
 import '../ui/theme.dart';
+import '../voice/ocr.dart';
 import '../widgets/camera_feed.dart';
 import '../widgets/camera_layout.dart';
 import '../widgets/tag_painter.dart';
@@ -111,8 +112,40 @@ class _LearnViewState extends State<LearnView> {
     final c = await Vision.embedVariants(await Models.embedder(_embSpec), frame, r.detections[i].box);
     if (!mounted) return;
     setState(() {
-      _captures.add(c);
+      _captures.add((vectors: c.vectors, crop: c.crop));
       _capturing = false;
+    });
+    // Read the label (name, MRP) from this capture; keep the best guess so far.
+    try {
+      final g = await readLabel(c.ocr);
+      if (mounted && (g.name != null || g.price != null)) {
+        setState(() => _ocr = (name: g.name ?? _ocr?.name, price: g.price ?? _ocr?.price));
+      }
+    } catch (e) {
+      debugPrint('ocr: $e');
+    }
+  }
+
+  void _hint(String text) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+
+  void _tryCapture() => _captures.length >= maxCaptures ? _hint('$maxCaptures sides captured: tap Save') : _capture();
+
+  void _trySave() {
+    if (_productId == null) return _hint('Pick a product above (or New product) first');
+    if (_captures.isEmpty || _stillNeeded > 0) return _hint('Capture $_stillNeeded more side(s) first');
+    _save();
+  }
+
+  /// Name / price read from the pack by OCR, offered to prefill "New product".
+  LabelGuess? _ocr;
+
+  Future<void> _newProduct({String? name, double? price}) async {
+    final id = await showProductDialog(context, name: name, price: price);
+    if (id == null) return;
+    await _loadProducts();
+    setState(() {
+      _productId = id;
+      _ocr = null;
     });
   }
 
@@ -184,16 +217,23 @@ class _LearnViewState extends State<LearnView> {
                 ActionChip(
                   avatar: const Icon(Icons.add, size: 18),
                   label: const Text('New product'),
-                  onPressed: () async {
-                    final id = await showProductDialog(context);
-                    if (id == null) return;
-                    await _loadProducts();
-                    setState(() => _productId = id);
-                  },
+                  onPressed: () => _newProduct(name: _ocr?.name, price: _ocr?.price),
                 ),
               ],
             ),
           ),
+          // Text read from the pack: one tap creates the product with it filled in.
+          if (_ocr != null && _productId == null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+              child: ActionChip(
+                avatar: const Icon(Icons.document_scanner, size: 18),
+                label: Text(
+                  'Read: ${_ocr!.name ?? '?'}${_ocr!.price != null ? ' · ₹${_ocr!.price!.toStringAsFixed(0)}' : ''} — Use',
+                ),
+                onPressed: () => _newProduct(name: _ocr!.name, price: _ocr!.price),
+              ),
+            ),
           // Captured angles: tap ✕ to drop a bad one before saving.
           SizedBox(
             height: 84,
@@ -232,7 +272,7 @@ class _LearnViewState extends State<LearnView> {
               children: [
                 Expanded(
                   child: FilledButton.tonalIcon(
-                    onPressed: _capturing || _captures.length >= maxCaptures ? null : _capture,
+                    onPressed: _capturing ? null : _tryCapture,
                     icon: const Icon(Icons.camera),
                     label: Text(_capturing ? 'Capturing…' : 'Capture ${_captures.length}/$maxCaptures'),
                   ),
@@ -240,7 +280,7 @@ class _LearnViewState extends State<LearnView> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: _productId == null || _captures.isEmpty || _stillNeeded > 0 || _saving ? null : _save,
+                    onPressed: _saving ? null : _trySave, // stays full colour; says what's missing if not ready
                     icon: const Icon(Icons.save),
                     label: Text(
                       _productId == null

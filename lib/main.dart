@@ -152,42 +152,43 @@ class _AppShellState extends State<AppShell> {
       );
     }
 
-    return Scaffold(
-      body: body,
-      // The big round Bill button sits in a notch in the middle of the bar.
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: SizedBox(
-        width: 68,
-        height: 68,
-        child: FloatingActionButton(
-          heroTag: 'bill',
-          shape: const CircleBorder(),
-          backgroundColor: _tab == Tabs.bill ? GinloColors.blue : Colors.white,
-          foregroundColor: _tab == Tabs.bill ? Colors.white : GinloColors.blue,
-          elevation: 4,
-          onPressed: () => _select(Tabs.bill),
-          child: const Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.document_scanner, size: 28),
-              Text('Bill', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
-            ],
+    // Bill: a round blue button in the middle of the bar (inside it, so it never covers a screen).
+    final billSelected = _tab == Tabs.bill;
+    final bill = Expanded(
+      child: InkResponse(
+        onTap: () => _select(Tabs.bill),
+        child: Center(
+          child: Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: GinloColors.blue,
+              shape: BoxShape.circle,
+              border: billSelected ? Border.all(color: GinloColors.yellow, width: 3) : null,
+              boxShadow: const [BoxShadow(color: Color(0x330035F5), blurRadius: 8, offset: Offset(0, 2))],
+            ),
+            child: const Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.document_scanner, color: Colors.white, size: 24),
+                Text(
+                  'Bill',
+                  style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
           ),
         ),
       ),
+    );
+
+    return Scaffold(
+      body: body,
       bottomNavigationBar: BottomAppBar(
         color: Colors.white,
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8,
-        height: 68,
+        height: 72,
         padding: EdgeInsets.zero,
-        child: Row(
-          children: [
-            ..._left.map(tab),
-            const SizedBox(width: 76), // room for the Bill button
-            ...right.map(tab),
-          ],
-        ),
+        child: Row(children: [..._left.map(tab), bill, ...right.map(tab)]),
       ),
     );
   }

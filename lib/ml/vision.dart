@@ -82,7 +82,7 @@ class Vision {
 
   /// Teaching: fingerprint one box in every [teachVariants] way (turned, darker, brighter, further,
   /// closer), plus its crop picture. Runs once per Capture tap, not on every live frame.
-  static Future<({List<Float32List> vectors, Uint8List crop})> embedVariants(
+  static Future<({List<Float32List> vectors, Uint8List crop, Uint8List ocr})> embedVariants(
     Embedder embedder,
     FrameData frame,
     Rect box,
@@ -116,15 +116,20 @@ class Vision {
   // Static, so the isolate closures can't accidentally capture an Interpreter (they can't be sent).
   static Future<VisionResult> _spawn(_Job job) => Isolate.run(() => _run(job));
 
-  static Future<({List<Float32List> vectors, Uint8List crop})> _spawnVariants(int address, FrameData frame, Rect box) =>
-      Isolate.run(() {
-        final emb = Interpreter.fromAddress(address, allocated: true);
-        final input = Float32List(Embedder.size * Embedder.size * 3);
-        return (
-          vectors: [for (final v in teachVariants) _embed(emb, frame, box, input, v)],
-          crop: cropJpeg(frame, box),
-        );
-      });
+  static Future<({List<Float32List> vectors, Uint8List crop, Uint8List ocr})> _spawnVariants(
+    int address,
+    FrameData frame,
+    Rect box,
+  ) => Isolate.run(() {
+    final emb = Interpreter.fromAddress(address, allocated: true);
+    final input = Float32List(Embedder.size * Embedder.size * 3);
+    return (
+      vectors: [for (final v in teachVariants) _embed(emb, frame, box, input, v)],
+      crop: cropJpeg(frame, box),
+      // Full-resolution crop for reading the label (name, MRP) with OCR.
+      ocr: cropJpeg(frame, box, shortSide: 2000, longSide: 2000),
+    );
+  });
 }
 
 Float32List _embed(Interpreter emb, Pixels frame, Rect box, Float32List input, Variant v) {
