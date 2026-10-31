@@ -1,0 +1,2921 @@
+[
+  {
+    "instruction": "Sirf 5 hi Coke bachi hai.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Coke",
+            "qty": 5
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Maggi ke bas teen packet reh gaye.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Maggi",
+            "qty": 3
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Arey Lays khatam ho gaya, zero kar de.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Lays",
+            "qty": 0
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Parle G ke abhi bara packet pade hain.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Parle-G",
+            "qty": 12
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Bhai Amul doodh ki chhe pouch hi hain ab.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Amul Milk",
+            "qty": 6
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "अभी सिर्फ चार साबुन बचे हैं।",
+    "answer": {
+      "status": "needs_clarification",
+      "actions": [],
+      "clarification_question": "Kaunsa soap?"
+    }
+  },
+  {
+    "instruction": "Coke ki jo choti wali bottle hai na, uski do hi hain.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Coke small bottle",
+            "qty": 2
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Haan, woh Tata namak? Uske saat packet bache hain.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Tata Salt",
+            "qty": 7
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "I checked, we've only got nine Dairy Milks left.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Dairy Milk",
+            "qty": 9
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Dettol wala sabun ab ek bhi nahi bacha.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Dettol soap",
+            "qty": 0
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Aaj bees packet Maggi aur aaye hain.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Maggi",
+            "qty": 20
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Arey woh Lays ke das naye packet bhi daal dena.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Lays",
+            "qty": 10
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Subah paanch Coke ki bottle aayi thi.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Coke",
+            "qty": 5
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Parle G ka ek carton aaya hai, usmein 48 packet hain.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Parle-G",
+            "qty": 48
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "तीस किलो चीनी और आई है आज।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Sugar",
+            "qty": 30
+          }
+        }
+      ],
+      "note": "qty unit is kilograms; product catalog must use compatible unit"
+    }
+  },
+  {
+    "instruction": "Add another six bottles of Sprite, delivery just came.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Sprite",
+            "qty": 6
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Bhai woh Amul butter ke aath aur rakh le stock mein.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Amul Butter",
+            "qty": 8
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Kal jo stock tha usme se chaar Colgate bik gaye.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "remove_stock",
+          "arguments": {
+            "product": "Colgate",
+            "qty": 4
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Do packet Maggi phat gaye the, hata de unko.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "remove_stock",
+          "arguments": {
+            "product": "Maggi",
+            "qty": 2
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "तीन तेल की बोतल टूट गई हैं, स्टॉक से निकाल देना।",
+    "answer": {
+      "status": "needs_clarification",
+      "actions": [],
+      "clarification_question": "Kaunsa tel?"
+    }
+  },
+  {
+    "instruction": "Maggi ab pandrah ki ho gayi hai.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Maggi",
+            "price": 15
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Bhai Coke ka rate chaalis kar de.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Coke",
+            "price": 40
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Parle G pehle paanch ka tha, ab das ka hai.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Parle-G",
+            "price": 10
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "वो नमक है ना, अब अट्ठाईस रुपये का है।",
+    "answer": {
+      "status": "needs_clarification",
+      "actions": [],
+      "clarification_question": "Kaunsa namak?"
+    }
+  },
+  {
+    "instruction": "Dairy Milk ka price ab 45 rakhna.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Dairy Milk",
+            "price": 45
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Amul butter pe do rupaye aur badha de.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "get_price",
+          "arguments": {
+            "product": "Amul Butter"
+          }
+        }
+      ],
+      "note": "After get_price returns, calculate new price (current + 2)"
+    }
+  },
+  {
+    "instruction": "Woh Lays wala packet na, usko bees ka kar.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Lays",
+            "price": 20
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Dettol soap ab 35 ka mil raha hai, hum bhi 35 rakhenge.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Dettol Soap",
+            "price": 35
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Make the 500 ml Coke 40 rupees now.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Coke 500ml",
+            "price": 40
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "आशीर्वाद आटा पाँच रुपये सस्ता कर दो।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "get_price",
+          "arguments": {
+            "product": "Aashirvaad Atta"
+          }
+        }
+      ],
+      "note": "After get_price returns, calculate new price (current - 5)"
+    }
+  },
+  {
+    "instruction": "Haan abhi jo photo li na, woh Maggi Masala hai, chaudah rupaye ki.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Maggi Masala",
+            "price": 14
+          }
+        }
+      ],
+      "note": "Active Teach session pictures must be attached; stock optional"
+    }
+  },
+  {
+    "instruction": "Ye wala Good Day hai, das ka packet, bees rakhe hain.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Good Day",
+            "price": 10,
+            "qty": 20
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Isko Lays Magic Masala ke naam se daal de, twenty rupees.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Lays Magic Masala",
+            "price": 20
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "अभी जो फोटो खींची है, वो टाटा नमक है। अट्ठाईस रुपये का है।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Tata Salt",
+            "price": 28
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "This one is Amul Taaza, 500 ml, ₹28. I've got 12 of them.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Amul Taaza 500ml",
+            "price": 28,
+            "qty": 12
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Haan ye photo wala naya Colgate hai, 100 gram ka, 65 rupaye.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Colgate 100g",
+            "price": 65
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Arey woh red packet jo click kiya tha, usko Kurkure Masala Munch bolke save kar.",
+    "answer": {
+      "status": "needs_clarification",
+      "actions": [],
+      "clarification_question": "Kurkure Masala Munch ka price kya rakhein?"
+    }
+  },
+  {
+    "instruction": "Ye naya wala aaya hai, naam hai Sunfeast Yippee, pandrah ka.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Sunfeast Yippee",
+            "price": 15
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "इसको रजिस्टर कर दो, नाम है अमूल बटर, सौ ग्राम, साठ रुपये, दस पीस।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Amul Butter 100g",
+            "price": 60,
+            "qty": 10
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Just clicked this one. It's Red Label tea, ₹120, eight boxes.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Red Label Tea",
+            "price": 120,
+            "qty": 8
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Coke ki bas, uh, paanch... nahi chaar bottle hain.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Coke",
+            "qty": 4
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Maggi ko 12... sorry, 14 rupaye kar de.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Maggi",
+            "price": 14
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Woh blue wala Lays, uske chhe bache hain.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Lays blue variant",
+            "qty": 6
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Do packet aur aaye hain, Parle G ke, haan.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Parle-G",
+            "qty": 2
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Abhi jo item click kiya tha na, iska naam Bourbon hai, das ka hai.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Bourbon",
+            "price": 10
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "सर्फ एक्सेल की कीमत अब पचपन कर देना, और स्टॉक सिर्फ सात है।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Surf Excel",
+            "price": 55
+          }
+        },
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Surf Excel",
+            "qty": 7
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Maggi ka rate 14 kar, aur stock bhi bees kar dena.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Maggi",
+            "price": 14
+          }
+        },
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Maggi",
+            "qty": 20
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Ye jo Coke hai na, iske 5 aur aaye the, par 2 toot gayi.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Coke",
+            "qty": 5
+          }
+        },
+        {
+          "tool": "remove_stock",
+          "arguments": {
+            "product": "Coke",
+            "qty": 2
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Bhai ye wala naya daal, naam Bingo Tedhe Medhe, rate 20, quantity 15.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Bingo Tedhe Medhe",
+            "price": 20,
+            "qty": 15
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "I think there are five Cokes left... actually, check that, six.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Coke",
+            "qty": 6
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Bhai Frooti ke bas aath bache hain.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Frooti",
+            "qty": 8
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Woh chhoti Pepsi, sirf do bottle hai ab.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Pepsi small bottle",
+            "qty": 2
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "देखना, हल्दीराम भुजिया के ग्यारह पैकेट बचे हैं।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Haldiram Bhujia",
+            "qty": 11
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Abhi gin ke dekha, Colgate ke 17 piece hain.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Colgate",
+            "qty": 17
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Nescafe ke dabbe ab ek hi hai.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Nescafe",
+            "qty": 1
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Kurkure toh saare khatam, stock zero.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Kurkure",
+            "qty": 0
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "There are exactly 16 KitKats on the shelf.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "KitKat",
+            "qty": 16
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Mere paas ab bas 4 Vim bar hain.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Vim bar",
+            "qty": 4
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Rin ke dus packet bache honge, nahi exactly nau hain.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Rin",
+            "qty": 9
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "गिनती में चौदह पतंजलि शहद की बोतलें निकलीं।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Patanjali Honey",
+            "qty": 14
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Bhai 250 gram wala chai patti ka packet 6 hi reh gaya.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Tea 250g",
+            "qty": 6
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "We have three 1-litre Amul milk cartons left.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Amul Milk 1L",
+            "qty": 3
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Britannia bread ke abhi saat packet hain, bas.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Britannia Bread",
+            "qty": 7
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Twenty-six eggs left, update that count.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Eggs",
+            "qty": 26
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "गोदाम में बासमती चावल के बारह बैग बचे हैं।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Basmati Rice",
+            "qty": 12
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Only one packet of Yippee is left, not two.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Yippee",
+            "qty": 1
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Bournvita ke tin abhi chaar hain.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Bournvita",
+            "qty": 4
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Maza ki stock count chhe kar, saari gin li.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Maaza",
+            "qty": 6
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "रियल जूस के नौ डिब्बे ही बचे हैं।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Real Juice",
+            "qty": 9
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Sunlight soap sirf do reh gaye, likh lo.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Sunlight soap",
+            "qty": 2
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Bhai woh Bingo tedhe medhe ke 13 packet hi bach rahe hain.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Bingo Tedhe Medhe",
+            "qty": 13
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Coke ki 500 ml wali ab 11 hai, do litre wali nahi.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Coke 500ml",
+            "qty": 11
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Dabur honey ki ek bhi bottle nahi hai.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Dabur Honey",
+            "qty": 0
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "अब चायपत्ती के 250 ग्राम वाले सात पैकेट हैं।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Tea 250g",
+            "qty": 7
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Umm... 18 nahi, 19 Dairy Milk remaining.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_stock",
+          "arguments": {
+            "product": "Dairy Milk",
+            "qty": 19
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Aaj Britannia bread ke 9 packet aur rakh diye.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Britannia Bread",
+            "qty": 9
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Delivery wala 24 Frooti chhod gaya.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Frooti",
+            "qty": 24
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "कल के मुकाबले आज आठ पेप्सी और आ गई हैं।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Pepsi",
+            "qty": 8
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Good Day ke chhe naye packet receive hue.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Good Day",
+            "qty": 6
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Haan woh Lux sabun, uske 12 aur daal do.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Lux",
+            "qty": 12
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "We just got another 30 eggs in.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Eggs",
+            "qty": 30
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Ek box mein 20 KitKat hain, aur ek box aaya hai.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "KitKat",
+            "qty": 20
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Yippee ke teen aur aa gaye bhai.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Yippee",
+            "qty": 3
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "दो किलो चना दाल और मिली है, जोड़ लो।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Chana Dal",
+            "qty": 2
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Oreo ke 15 aur aaye the sham ko.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Oreo",
+            "qty": 15
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Bhai 500 ml wala Pepsi ke saat aur aa gaye.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Pepsi 500ml",
+            "qty": 7
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "More stock came in: four bottles of Kissan ketchup.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Kissan Ketchup",
+            "qty": 4
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Amul milk ka 10 pouch extra mil gaya aaj.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Amul Milk",
+            "qty": 10
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "बिसलेरी की छह बोतलें और रख दी हैं।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Bisleri",
+            "qty": 6
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Haan ab jo packet laaye hain, unme se 8 Haldiram aloo bhujia hain.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Haldiram Aloo Bhujia",
+            "qty": 8
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Tata Tea ke solah packet aur chadha de.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Tata Tea",
+            "qty": 16
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Received twelve packs of Hide & Seek this morning.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Hide & Seek",
+            "qty": 12
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Aaj Ponds powder ke 5 dabbe naya aaya.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Ponds Powder",
+            "qty": 5
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "चिप्स के चार नए पैकेट आए हैं, स्टॉक में जोड़ देना।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Chips",
+            "qty": 4
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Jo shipment aaya tha usme 40 Chocos hain, add kar.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "add_stock",
+          "arguments": {
+            "product": "Chocos",
+            "qty": 40
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Aaj 7 Sprite bik gayi, count se minus kar.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "remove_stock",
+          "arguments": {
+            "product": "Sprite",
+            "qty": 7
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Bhai do Oreo ke packet expire ho gaye.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "remove_stock",
+          "arguments": {
+            "product": "Oreo",
+            "qty": 2
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Maine teen Lux soap wapas kar diye, stock se hata.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "remove_stock",
+          "arguments": {
+            "product": "Lux",
+            "qty": 3
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "आज पाँच गुड डे बिक गए।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "remove_stock",
+          "arguments": {
+            "product": "Good Day",
+            "qty": 5
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Four bottles of Real juice leaked, remove them.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "remove_stock",
+          "arguments": {
+            "product": "Real Juice",
+            "qty": 4
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Kal kitkat ke chhe piece sell hue the, minus kar.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "remove_stock",
+          "arguments": {
+            "product": "KitKat",
+            "qty": 6
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Teen Hide and Seek ka packet toot gaya tha.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "remove_stock",
+          "arguments": {
+            "product": "Hide & Seek",
+            "qty": 3
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Amul cheese ka ek packet kharab nikla, hata de.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "remove_stock",
+          "arguments": {
+            "product": "Amul Cheese",
+            "qty": 1
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "दो डिब्बे बॉर्नवीटा बिक गए, कम कर दो।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "remove_stock",
+          "arguments": {
+            "product": "Bournvita",
+            "qty": 2
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Bhai Frooti ke 11 bech diye subah.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "remove_stock",
+          "arguments": {
+            "product": "Frooti",
+            "qty": 11
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Take away two expired cartons of Amul milk from inventory.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "remove_stock",
+          "arguments": {
+            "product": "Amul Milk",
+            "qty": 2
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Nescafe ka ek jar customer ko de diya, stock se ghata.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "remove_stock",
+          "arguments": {
+            "product": "Nescafe",
+            "qty": 1
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "तीन पैकेट चायपत्ती वापस भेज दिए हैं।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "remove_stock",
+          "arguments": {
+            "product": "Tea",
+            "qty": 3
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Aaj chaar Vim bar bik gaye hain.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "remove_stock",
+          "arguments": {
+            "product": "Vim bar",
+            "qty": 4
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Suno do Bisleri bottle phat gayi, hata do.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "remove_stock",
+          "arguments": {
+            "product": "Bisleri",
+            "qty": 2
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Six Maggi packets sold at the counter, deduct those.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "remove_stock",
+          "arguments": {
+            "product": "Maggi",
+            "qty": 6
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "कल की सेल में सात कुरकुरे निकले थे।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "remove_stock",
+          "arguments": {
+            "product": "Kurkure",
+            "qty": 7
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Ek Dabar honey ka jar toot gaya, minus one.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "remove_stock",
+          "arguments": {
+            "product": "Dabur Honey",
+            "qty": 1
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Bhai Nescafe ka jar ab 180 ka hai.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Nescafe",
+            "price": 180
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Vim ki tikki ko 15 rupaye kar de.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Vim bar",
+            "price": 15
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "अब डेयरी मिल्क की कीमत पचास रुपये रखो।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Dairy Milk",
+            "price": 50
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Hide and Seek biscuits 35 ke ho gaye.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Hide & Seek",
+            "price": 35
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Make the 1-litre Real juice ₹110.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Real Juice 1L",
+            "price": 110
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Sprite 500 ml ab 40 mein dena.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Sprite 500ml",
+            "price": 40
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Haan Britannia bread ko ab 45 ka rakhte hain.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Britannia Bread",
+            "price": 45
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "किसान केचप की बोतल का भाव नब्बे कर दो।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Kissan Ketchup",
+            "price": 90
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Bournvita wala dabba 210 se 225 ho gaya, naya rate daal.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Bournvita",
+            "price": 225
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Frooti ka chhota pack 10 hi rakho.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Frooti small pack",
+            "price": 10
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Oreo 20 rupaye wala ab 25 ka ho gaya.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Oreo",
+            "price": 25
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Please update the price of Dettol handwash to 99.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Dettol Handwash",
+            "price": 99
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Bhai woh Sunfeast Yippee ab 16 ki deni hai.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Sunfeast Yippee",
+            "price": 16
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "500 gram wala Aashirvaad atta 35 ka kar dena.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Aashirvaad Atta 500g",
+            "price": 35
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "सर्फ एक्सेल का एक किलो वाला पैकेट एक सौ पचहत्तर का है।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Surf Excel 1kg",
+            "price": 175
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Bingo ka bada packet 50 ka rakho, chhota nahi.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Bingo large pack",
+            "price": 50
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Haan ab Dabur honey 100 gram ka 75 kar.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Dabur Honey 100g",
+            "price": 75
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Change the price for KitKat to ₹30, not ₹25.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "KitKat",
+            "price": 30
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Colgate 200g ka rate ab 120 hai.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Colgate 200g",
+            "price": 120
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "तेल की एक लीटर वाली बोतल का रेट एक सौ साठ है।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Oil 1L",
+            "price": 160
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Pepsi ka 750ml wala 45 kar, theek hai.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Pepsi 750ml",
+            "price": 45
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Mujhe lagta hai Amul cheese 135... nahi 140 hai, update kar.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "set_price",
+          "arguments": {
+            "product": "Amul Cheese",
+            "price": 140
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Ye jo photo li, iska naam Haldiram Bhujia hai, 45 rupaye, 10 packet.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Haldiram Bhujia",
+            "price": 45,
+            "qty": 10
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "Naya item hai, picture wali bottle Bisleri 1 litre, 20 ki, 12 hain.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Bisleri 1L",
+            "price": 20,
+            "qty": 12
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "इन फोटो वाले बिस्कुट का नाम गुड डे है, दस रुपये के हैं।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Good Day",
+            "price": 10
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "Photo wala ye Oreo 50 gram hai, price 10, stock 30.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Oreo 50g",
+            "price": 10,
+            "qty": 30
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "Save the pictures as Nescafe Classic 50g, priced at 180, quantity six.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Nescafe Classic 50g",
+            "price": 180,
+            "qty": 6
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "Bhai abhi ye Sunlight sabun dikhaya, 25 ka hai, 16 pade hain.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Sunlight soap",
+            "price": 25,
+            "qty": 16
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "Isko Lux Rose bolke add kar do, 40 rupaye, total 22.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Lux Rose",
+            "price": 40,
+            "qty": 22
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "अभी जो पैकेट दिखाया वो विम बार है, पंद्रह का, बीस पीस।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Vim bar",
+            "price": 15,
+            "qty": 20
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "Haan photo ho gaya, naam Bournvita 500 gram, 240 ka.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Bournvita 500g",
+            "price": 240
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "This new item is Kissan ketchup 200g, 60 rupees and eight in stock.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Kissan Ketchup 200g",
+            "price": 60,
+            "qty": 8
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "Ye wala 500 ml Pepsi hai, 40 rupaye, 18 bottle.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Pepsi 500ml",
+            "price": 40,
+            "qty": 18
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "जिसकी फोटो खींची वो टाटा टी गोल्ड है, सौ रुपये, चार पैकेट।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Tata Tea Gold",
+            "price": 100,
+            "qty": 4
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "Woh abhi jiska picture liya, Hide and Seek, 35 ka, bara hain.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Hide & Seek",
+            "price": 35,
+            "qty": 12
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "Add these shots to catalog as Amul Cheese Slice, ₹125, five packs.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Amul Cheese Slice",
+            "price": 125,
+            "qty": 5
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "Ye photo ka product Parachute coconut oil 100ml hai, 45 ka.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Parachute Coconut Oil 100ml",
+            "price": 45
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "Bhai nayi chhoti Frooti hai, ten rupees, 50 packet.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Frooti small pack",
+            "price": 10,
+            "qty": 50
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "अभी दिखाया हुआ सामान डाबर शहद सौ ग्राम है, अस्सी रुपये।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Dabur Honey 100g",
+            "price": 80
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "This one we photographed is Britannia Cake, 30 each, 14 pieces.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Britannia Cake",
+            "price": 30,
+            "qty": 14
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "Isko Patanjali Dant Kanti ke naam pe rakh, price 75, stock 10.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Patanjali Dant Kanti",
+            "price": 75,
+            "qty": 10
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "Woh yellow packet jo abhi click kiya tha, name is Yippee Magic Masala, ₹15.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Yippee Magic Masala",
+            "price": 15
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "इसको नया प्रोडक्ट डालो, नाम कोलगेट मैक्स फ्रेश, कीमत नब्बे, मात्रा आठ।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Colgate Max Fresh",
+            "price": 90,
+            "qty": 8
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "Save this one as Clinic Plus shampoo 80ml, ₹50, twenty bottles.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Clinic Plus Shampoo 80ml",
+            "price": 50,
+            "qty": 20
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "Arey photo complete? Theek, ab isko Rin powder 500g bol, 55 ka aur 9 packet.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Rin Powder 500g",
+            "price": 55,
+            "qty": 9
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "Ye nayi Fortune sunflower oil one litre hai, price 160 aur 6 bottle.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Fortune Sunflower Oil 1L",
+            "price": 160,
+            "qty": 6
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "Picture wali ye Ponds cream 50 gram, 95 rupaye ki aur 11 hain.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "create_product",
+          "arguments": {
+            "product": "Ponds Cream 50g",
+            "price": 95,
+            "qty": 11
+          }
+        }
+      ],
+      "note": "Requires active Teach session with captured product images; missing stock is optional"
+    }
+  },
+  {
+    "instruction": "Maggi kitni bachi hai ab?",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "get_stock",
+          "arguments": {
+            "product": "Maggi"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Bhai stock dekh ke bata Parle G ka.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "get_stock",
+          "arguments": {
+            "product": "Parle-G"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "How many 500ml Pepsi bottles do we have?",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "get_stock",
+          "arguments": {
+            "product": "Pepsi 500ml"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "अभी कितने टाटा नमक के पैकेट हैं?",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "get_stock",
+          "arguments": {
+            "product": "Tata Salt"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Kurkure kitna pada hai, check kar zara.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "get_stock",
+          "arguments": {
+            "product": "Kurkure"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Frooti ke kitne dabbe available hain?",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "get_stock",
+          "arguments": {
+            "product": "Frooti"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Are there any Amul butter packs left?",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "get_stock",
+          "arguments": {
+            "product": "Amul Butter"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Bhai Coke ka abhi price kya chal raha hai?",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "get_price",
+          "arguments": {
+            "product": "Coke"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "बताओ, मैगी कितने की रखी है?",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "get_price",
+          "arguments": {
+            "product": "Maggi"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "What is the selling price of the large Bingo packet?",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "get_price",
+          "arguments": {
+            "product": "Bingo large pack"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Colgate 200g ka rate check kar.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "get_price",
+          "arguments": {
+            "product": "Colgate 200g"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Parle G kitne mein bech rahe hain ab?",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "get_price",
+          "arguments": {
+            "product": "Parle-G"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "दुकान की पूरी लिस्ट दिखाओ।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "show_catalog",
+          "arguments": {}
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Show me all the products we have saved.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "show_catalog",
+          "arguments": {}
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Bhai inventory khol de, ek baar dekhna hai.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "show_catalog",
+          "arguments": {}
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Arey Maggi Masala ka naam Maggi 2-Minute kar de.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "rename_product",
+          "arguments": {
+            "product": "Maggi Masala",
+            "new_name": "Maggi 2-Minute"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Change Parle G to Parle-G Original in the list.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "rename_product",
+          "arguments": {
+            "product": "Parle G",
+            "new_name": "Parle-G Original"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "इस प्रोडक्ट का नाम कोक से कोका कोला कर दो।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "rename_product",
+          "arguments": {
+            "product": "Coke",
+            "new_name": "Coca-Cola"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Bhai woh Yippee ka naam Sunfeast Yippee rakhna.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "rename_product",
+          "arguments": {
+            "product": "Yippee",
+            "new_name": "Sunfeast Yippee"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Rename Amul Milk 500ml as Amul Taaza 500ml.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "rename_product",
+          "arguments": {
+            "product": "Amul Milk 500ml",
+            "new_name": "Amul Taaza 500ml"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "instruction": "Yeh purana product Chocos remove kar de.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "delete_product",
+          "arguments": {
+            "product": "Chocos"
+          }
+        }
+      ],
+      "note": "Requires confirmation before deletion"
+    }
+  },
+  {
+    "instruction": "Delete the old listing for Frooti Mango 200ml.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "delete_product",
+          "arguments": {
+            "product": "Frooti Mango 200ml"
+          }
+        }
+      ],
+      "note": "Requires confirmation before deletion"
+    }
+  },
+  {
+    "instruction": "पारले जी पाँच रुपये वाला प्रोडक्ट हटा दो।",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "delete_product",
+          "arguments": {
+            "product": "Parle-G 5 rupee pack"
+          }
+        }
+      ],
+      "note": "Requires confirmation before deletion"
+    }
+  },
+  {
+    "instruction": "Bhai wo duplicate Coke 500ml delete kar, confirmation le lena.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "delete_product",
+          "arguments": {
+            "product": "Coke 500ml"
+          }
+        }
+      ],
+      "note": "Requires confirmation before deletion"
+    }
+  },
+  {
+    "instruction": "Remove the catalog entry for Nescafe Classic 25g.",
+    "answer": {
+      "status": "ready",
+      "actions": [
+        {
+          "tool": "delete_product",
+          "arguments": {
+            "product": "Nescafe Classic 25g"
+          }
+        }
+      ],
+      "note": "Requires confirmation before deletion"
+    }
+  },
+  {
+    "instruction": "Bas chaar packet reh gaye.",
+    "answer": {
+      "status": "needs_clarification",
+      "actions": [],
+      "clarification_question": "Kaunse product ke chaar packet bache hain?"
+    }
+  },
+  {
+    "instruction": "Arey woh wala rate 25 kar dena.",
+    "answer": {
+      "status": "needs_clarification",
+      "actions": [],
+      "clarification_question": "Kis product ka rate ₹25 karna hai?"
+    }
+  },
+  {
+    "instruction": "नमकीन के दस पैकेट और आ गए।",
+    "answer": {
+      "status": "needs_clarification",
+      "actions": [],
+      "clarification_question": "Kaunsa namkeen product?"
+    }
+  },
+  {
+    "instruction": "Nayi photo wali cheez add kar do.",
+    "answer": {
+      "status": "needs_clarification",
+      "actions": [],
+      "clarification_question": "Is naye product ka naam aur price kya hai?"
+    }
+  },
+  {
+    "instruction": "Ye photo wala naya item hai, naam Oreo hai.",
+    "answer": {
+      "status": "needs_clarification",
+      "actions": [],
+      "clarification_question": "Oreo ka price kya rakhein?"
+    }
+  },
+  {
+    "instruction": "Bhai cold drink 5 hi bachi hai.",
+    "answer": {
+      "status": "needs_clarification",
+      "actions": [],
+      "clarification_question": "Kaunsi cold drink aur size?"
+    }
+  },
+  {
+    "instruction": "Make it 80 rupees.",
+    "answer": {
+      "status": "needs_clarification",
+      "actions": [],
+      "clarification_question": "Kis product ka price ₹80 karna hai?"
+    }
+  },
+  {
+    "instruction": "Woh chhota wala hata do.",
+    "answer": {
+      "status": "needs_clarification",
+      "actions": [],
+      "clarification_question": "Kaunsa product remove karna hai?"
+    }
+  },
+  {
+    "instruction": "Iska naam badalna hai.",
+    "answer": {
+      "status": "needs_clarification",
+      "actions": [],
+      "clarification_question": "Kis product ka naam aur naya naam kya hona chahiye?"
+    }
+  },
+  {
+    "instruction": "तीन डिब्बे कम कर दो।",
+    "answer": {
+      "status": "needs_clarification",
+      "actions": [],
+      "clarification_question": "Kis product ke teen dabbe ghatane hain?"
+    }
+  },
+  {
+    "instruction": "Add the new photographed product at fifteen.",
+    "answer": {
+      "status": "needs_clarification",
+      "actions": [],
+      "clarification_question": "Product ka naam kya hai?"
+    }
+  },
+  {
+    "instruction": "Biscuit ke paanch aaye hain.",
+    "answer": {
+      "status": "needs_clarification",
+      "actions": [],
+      "clarification_question": "Kaunse biscuits?"
+    }
+  },
+  {
+    "instruction": "जो अभी फोटो लिया है उसे सेव करो, पंद्रह पीस हैं।",
+    "answer": {
+      "status": "needs_clarification",
+      "actions": [],
+      "clarification_question": "Product ka naam aur price kya hai?"
+    }
+  },
+  {
+    "instruction": "Sugar ka price badha de.",
+    "answer": {
+      "status": "needs_clarification",
+      "actions": [],
+      "clarification_question": "Sugar ka price kitne rupaye badhana hai?"
+    }
+  },
+  {
+    "instruction": "KitKat ka rate ab kam kar do.",
+    "answer": {
+      "status": "needs_clarification",
+      "actions": [],
+      "clarification_question": "KitKat ka naya rate ya kitna kam karna hai?"
+    }
+  }
+]

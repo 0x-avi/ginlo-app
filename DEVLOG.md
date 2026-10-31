@@ -171,3 +171,9 @@ old upgrade and can't be recovered.
   3. Also compare each candidate with the product's **already saved** angles (thumbnail first, then embedding);
      keep only views that add something new, up to ~8.
   4. Each kept frame gets the 8 teach variants as today; show the picked frames so bad ones can still be removed.
+- **Voice/command benchmark** (added 31 Oct): `eval/voice_eval_200.json` — 200 shopkeeper commands (Hinglish, Hindi in
+  Devanagari, English; self-corrections like "paanch... nahi chaar") with the expected tool calls (`set_stock`,
+  `add_stock`, `remove_stock`, `set_price`, `get_price`, `get_stock`, `create_product`, `rename_product`,
+  `delete_product`, `show_catalog`) or `needs_clarification`. Use it to score the rules parser, FunctionGemma and a
+  quantized Qwen3-0.6B (exact tool + arguments, clarification when needed); if none is good enough, fine-tune on it.
+  Speech side: check Whisper on Hindi/Hinglish audio; Sarvam API is the online fallback (later — stay offline for now).
