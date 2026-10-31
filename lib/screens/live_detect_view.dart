@@ -66,7 +66,7 @@ class _LiveDetectViewState extends State<LiveDetectView> {
                 : r == null
                 ? 'Loading ${_spec.title}…'
                 : '${r.detections.length} boxes · ${(_frameTimes.length / 2).toStringAsFixed(1)} fps · '
-                      'prep ${r.preMs} + model ${r.inferMs} + boxes ${r.postMs} ms · frame turned ${CameraFeed.lastRotation}°',
+                      'prep ${r.preMs} + model ${r.inferMs} + boxes ${r.postMs} ms',
             style: const TextStyle(fontSize: 12),
           ),
         ),

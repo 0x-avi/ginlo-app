@@ -29,7 +29,7 @@ class LearnScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _portrait(context) ? AppBar(title: const Text('Learn products')) : null,
+      appBar: AppBar(title: const Text('Learn products')),
       body: active ? const LearnView() : const SizedBox.shrink(),
     );
   }
@@ -220,9 +220,4 @@ class _LearnViewState extends State<LearnView> {
       ),
     );
   }
-}
-
-bool _portrait(BuildContext context) {
-  final s = MediaQuery.sizeOf(context);
-  return s.height >= s.width;
 }

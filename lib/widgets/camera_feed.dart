@@ -1,10 +1,9 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show MethodChannel;
 
 import '../ml/frame.dart';
 
-/// Live back-camera preview that hands frames to [onFrame], one at a time.
+/// Live back-camera preview (portrait) that hands frames to [onFrame], one at a time.
 ///
 /// Frames arrive ~30 per second; while [onFrame] is still working on one, new ones are skipped,
 /// so a slow model just means fewer updates per second, never a growing queue.
@@ -13,9 +12,6 @@ class CameraFeed extends StatefulWidget {
   const CameraFeed({super.key, required this.onFrame, this.overlay});
   final Future<void> Function(FrameData frame) onFrame;
   final Widget? overlay;
-
-  /// Rotation applied to the latest frame (dev status lines show it).
-  static int lastRotation = 0;
 
   @override
   State<CameraFeed> createState() => _CameraFeedState();
@@ -32,7 +28,6 @@ class _CameraFeedState extends State<CameraFeed> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _readScreenRotation();
     _start();
   }
 
@@ -48,8 +43,9 @@ class _CameraFeedState extends State<CameraFeed> with WidgetsBindingObserver {
         imageFormatGroup: ImageFormatGroup.yuv420,
       );
       await cam.initialize(); // asks for camera permission the first time
-      // Frame turn = sensor angle - screen angle (Android's own formula for the back camera).
-      await cam.startImageStream((img) => _onImage(img, (back.sensorOrientation - _screenDegrees + 360) % 360));
+      // The app is portrait-only, so turning by the sensor's fixed mounting angle makes every
+      // frame upright, exactly as the preview shows it.
+      await cam.startImageStream((img) => _onImage(img, back.sensorOrientation));
       if (!mounted) return await cam.dispose();
       setState(() => _camera = cam);
     } catch (e) {
@@ -59,28 +55,9 @@ class _CameraFeedState extends State<CameraFeed> with WidgetsBindingObserver {
     }
   }
 
-  /// How far the screen has turned from the phone's natural (portrait) position: 0/90/180/270.
-  /// Asked from Android (MainActivity.kt): neither Flutter nor the camera plugin reports it
-  /// reliably, and guessing from the camera plugin turned landscape frames the wrong way.
-  int _screenDegrees = 0;
-  static const _display = MethodChannel('ginlo/display');
-
-  Future<void> _readScreenRotation() async {
-    try {
-      _screenDegrees = await _display.invokeMethod<int>('rotationDegrees') ?? 0;
-    } catch (_) {
-      _screenDegrees = 0; // tests / no native side: assume portrait
-    }
-  }
-
-  /// Screen size changed, e.g. the phone was turned: read the rotation again.
-  @override
-  void didChangeMetrics() => _readScreenRotation();
-
   void _onImage(CameraImage img, int rotation) {
     if (_busy || !mounted) return; // still working on the previous frame
     _busy = true;
-    CameraFeed.lastRotation = rotation;
     widget
         .onFrame(FrameData(img, rotation))
         .catchError((Object e) {
@@ -113,8 +90,6 @@ class _CameraFeedState extends State<CameraFeed> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final screen = MediaQuery.sizeOf(context);
-    final landscape = screen.width > screen.height;
     final cam = _camera;
     if (cam == null) {
       return Center(
@@ -123,27 +98,7 @@ class _CameraFeedState extends State<CameraFeed> with WidgetsBindingObserver {
             : const CircularProgressIndicator(),
       );
     }
-    // Size the preview ourselves from the screen's shape (wide in landscape, tall in portrait),
-    // as large as fits. The overlay (boxes) is drawn exactly on top, at the same size.
-    return LayoutBuilder(
-      builder: (context, box) {
-        final s = cam.value.previewSize;
-        final long = s == null ? 16.0 : (s.width > s.height ? s.width : s.height);
-        final short = s == null ? 9.0 : (s.width > s.height ? s.height : s.width);
-        final aspect = landscape ? long / short : short / long;
-        var w = box.maxWidth, h = w / aspect;
-        if (h > box.maxHeight) {
-          h = box.maxHeight;
-          w = h * aspect;
-        }
-        return Center(
-          child: SizedBox(
-            width: w,
-            height: h,
-            child: CameraPreview(cam, child: widget.overlay),
-          ),
-        );
-      },
-    );
+    // CameraPreview keeps the camera's own aspect ratio (no stretching); the child is drawn exactly on top.
+    return Center(child: CameraPreview(cam, child: widget.overlay));
   }
 }
