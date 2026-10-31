@@ -15,7 +15,7 @@ void main() {
     _phone(tester, landscape: false);
     await tester.pumpWidget(const GinLoApp());
     await tester.pump(); // no camera or database in tests, so don't wait for them to settle
-    expect(find.text('New bill'), findsOneWidget);
+    expect(find.text('Add to bill'), findsOneWidget); // Bill screen is first
     expect(find.byType(NavigationBar), findsOneWidget);
     for (final tab in ['Bill', 'Home', 'Products', 'Learn', 'Lab']) {
       expect(find.text(tab), findsWidgets); // tests run as the dev flavor, so Lab is there

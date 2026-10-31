@@ -6,19 +6,24 @@ import '../dev/perf_log.dart';
 import '../ml/detector.dart';
 import '../ml/embedder.dart';
 import '../ml/frame.dart';
+import '../data/bill_draft.dart';
+import '../data/sales.dart';
 import '../ml/matcher.dart';
 import '../ml/models.dart';
 import '../ml/smoother.dart';
 import '../ml/vision.dart';
 import '../widgets/camera_feed.dart';
 import '../widgets/camera_layout.dart';
+import '../ui/theme.dart';
 import '../widgets/tag_painter.dart';
+import 'invoice_screen.dart';
 
 final _detSpec = detectorSpecs[Models.billDetector];
 final _embSpec = embedderSpecs[Models.billEmbedder];
 
-/// Camera billing: YOLO finds each item, the embedder fingerprints it, the matcher names it
-/// from the shop's own catalog. Live for now; capture -> invoice -> UPI QR comes next.
+/// Camera billing: YOLO finds each item, the embedder fingerprints it, the matcher names it from the
+/// shop's own catalog. "Add to bill" freezes what's in view into the bill (BillDraft) and opens the
+/// invoice; from there: more photos, or Done -> payment QR.
 class BillScreen extends StatelessWidget {
   const BillScreen({super.key, required this.active});
 
@@ -29,7 +34,7 @@ class BillScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       // No title bar in landscape: the camera needs the height.
-      appBar: _portrait(context) ? AppBar(title: const Text('New bill')) : null,
+      appBar: _portrait(context) ? const GinloHeader() : null,
       body: active ? const _LiveBill() : const SizedBox.shrink(),
     );
   }
@@ -56,6 +61,7 @@ class _LiveBillState extends State<_LiveBill> {
   List<SteadyItem> _steady = const [];
   Map<String?, int> _steadyCounts = const {}; // product (null = Unknown) -> held count
   final _prices = <String, double>{};
+  Map<String, int> _productIds = const {}; // product name -> id (to lower its stock when sold)
   bool _prodView = false;
 
   static const _settingsKey = 'smoothing';
@@ -77,7 +83,12 @@ class _LiveBillState extends State<_LiveBill> {
   Future<void> _loadCatalog() async {
     try {
       final angles = await (await AppDb.open()).angles(_embSpec.id);
-      if (mounted) setState(() => _matcher = Matcher(angles));
+      if (mounted) {
+        setState(() {
+          _matcher = Matcher(angles);
+          _productIds = {for (final a in angles) a.name: a.productId};
+        });
+      }
     } catch (e) {
       debugPrint('catalog: $e');
     }
@@ -251,6 +262,27 @@ class _LiveBillState extends State<_LiveBill> {
     await (await AppDb.open()).setSetting(_settingsKey, _settings.toJsonString());
   }
 
+  /// Freezes the steady items in view into the bill and opens the invoice. Always uses the smoothed
+  /// counts (what the shop app shows), even in the dev raw view.
+  void _addToBill() {
+    final known = _steadyCounts.entries.where((e) => e.key != null);
+    if (known.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No known items in view yet')));
+      return;
+    }
+    BillDraft.instance.addAll([
+      for (final e in known)
+        BillLine(productId: _productIds[e.key], name: e.key!, qty: e.value, price: _prices[e.key] ?? 0),
+    ]);
+    final unknown = _steadyCounts[null] ?? 0;
+    if (unknown > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$unknown unknown item(s) not added. Teach them in Learn, or add them on the bill.')),
+      );
+    }
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const InvoiceScreen()));
+  }
+
   @override
   Widget build(BuildContext context) {
     final r = _last;
@@ -324,8 +356,8 @@ class _LiveBillState extends State<_LiveBill> {
               const Divider(),
               Row(
                 children: [
-                  Expanded(
-                    child: Text('Total', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  const Expanded(
+                    child: Text('In view', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                   ),
                   Text(
                     '₹${total.toStringAsFixed(2)}',
@@ -335,6 +367,37 @@ class _LiveBillState extends State<_LiveBill> {
               ),
             ],
           ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: FilledButton.icon(
+            onPressed: _addToBill,
+            icon: const Icon(Icons.add_shopping_cart),
+            label: const Text('Add to bill'),
+          ),
+        ),
+        // The bill so far (after one or more photos): tap to see it, edit it, or finish.
+        ListenableBuilder(
+          listenable: BillDraft.instance,
+          builder: (context, _) {
+            final draft = BillDraft.instance;
+            if (draft.isEmpty) return const SizedBox(height: 8);
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48)),
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InvoiceScreen())),
+                child: Row(
+                  children: [
+                    const Icon(Icons.receipt_long, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text('Bill: ${draft.itemCount} items')),
+                    Text('₹${draft.total.toStringAsFixed(2)}  →', style: const TextStyle(fontWeight: FontWeight.w700)),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
         if (isDev && r != null)
           Padding(
