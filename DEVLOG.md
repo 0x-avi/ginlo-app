@@ -180,6 +180,15 @@ come back, and a fast-moving box lost its track (too little overlap) and restart
 
 ---
 
+## 12. No splash, GinLo app icon — this commit
+- Splash: `launch_background.xml` is just the app background colour (#EEF2FB). Android 12+ always shows a
+  system splash, so `values-v31` / `values-night-v31` make it that colour with **no icon**, which is effectively invisible.
+- Icon: the GinLo wordmark on white. `mipmap-anydpi-v26/ic_launcher.xml` is an adaptive icon (white background
+  + `drawable-nodpi/ic_launcher_foreground.png`, logo inside the safe zone), so the phone's icon shape doesn't crop it;
+  `mipmap-*/ic_launcher.png` (48–192 px) are for older phones. Made from `assets/brand/ginlo_logo.png` with `sips`.
+
+---
+
 ## Backlog (planned, not built)
 - **Smoothing benchmark** (requested 31 Oct, after entry 7; extended after entry 9): the user builds a test set of
   scenes with known item counts; record ~5 s of raw per-frame results per scene (about how long a vendor waits
