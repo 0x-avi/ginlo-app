@@ -8,8 +8,8 @@ void main() {
     expect(find.text("Today's earnings will show here"), findsOneWidget);
 
     await tester.tap(find.text('Bill'));
-    await tester.pumpAndSettle();
-    expect(find.text('New bill'), findsOneWidget);
+    await tester.pump(); // no camera in tests, so don't wait for it to settle
+    expect(find.textContaining('New bill'), findsOneWidget);
 
     await tester.tap(find.text('Catalog'));
     await tester.pumpAndSettle();

@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'screens/bill_screen.dart';
 import 'screens/catalog_screen.dart';
 import 'screens/home_screen.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Portrait only: the camera frame rotation and box drawing assume it.
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(const GinLoApp());
 }
 
@@ -40,14 +44,15 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _tab = 0;
 
-  // IndexedStack keeps every tab alive, so switching tabs doesn't reset them
-  // (e.g. a half-finished bill survives a quick look at the catalog).
-  static const _screens = [HomeScreen(), BillScreen(), CatalogScreen()];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _tab, children: _screens),
+      // IndexedStack keeps every tab alive, so switching tabs doesn't reset them
+      // (e.g. a half-finished bill survives a quick look at the catalog).
+      body: IndexedStack(
+        index: _tab,
+        children: [const HomeScreen(), BillScreen(active: _tab == 1), const CatalogScreen()],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
         onDestinationSelected: (i) => setState(() => _tab = i),
