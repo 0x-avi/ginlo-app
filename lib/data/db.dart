@@ -153,6 +153,16 @@ class AppDb {
       (id: r['id'] as int, crop: r['crop'] as Uint8List?),
   ];
 
+  /// The first taught picture of a product (by name), to show as its photo. Null if none.
+  Future<Uint8List?> productPhoto(String name, String model) async {
+    final r = await db.rawQuery(
+      'SELECT e.crop FROM embeddings e JOIN products p ON p.id = e.product_id '
+      'WHERE p.name = ? AND e.model = ? AND e.crop IS NOT NULL ORDER BY e.id LIMIT 1',
+      [name, model],
+    );
+    return r.isEmpty ? null : r.first['crop'] as Uint8List;
+  }
+
   /// Removes a taught angle: every fingerprint with the same crop (its rotations, other embedders).
   Future<void> deleteAngle(int id) async {
     await db.rawDelete(
