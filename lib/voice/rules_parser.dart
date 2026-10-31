@@ -6,6 +6,12 @@ import 'numbers.dart';
 /// number decide whether it's a price or a quantity. The baseline an on-device LLM has to beat
 /// on `eval/voice_eval_200.json`.
 class RulesParser implements CommandParser {
+  /// When no catalog product is mentioned, keep the leftover words as the product name
+  /// ("Dettol soap ab 35 ka hai" -> "Dettol Soap") so the screen can say it wasn't found,
+  /// instead of asking "which product?". Off for benchmark scoring.
+  RulesParser({this.keepUnknownNames = false});
+  final bool keepUnknownNames;
+
   @override
   String get name => 'Rules (offline)';
 
@@ -69,7 +75,7 @@ class RulesParser implements CommandParser {
     final low = text.toLowerCase();
     final tokens = tokenize(text);
     final nums = _quantities(tokens);
-    final product = _matchCatalog(text, catalog) ?? inherited;
+    final product = _matchCatalog(text, catalog) ?? inherited ?? (keepUnknownNames ? _leftoverName(tokens) : null);
     bool has(List<String> words) => words.any((w) => _contains(low, w));
 
     // Rename: "Maggi Masala ka naam Maggi 2-Minute kar de", "rename X as Y", "change X to Y".
@@ -759,7 +765,48 @@ class RulesParser implements CommandParser {
     'bags',
   };
   static const _leftoverStop = {
+    'bas',
+    'sirf',
+    'reh',
+    'gaye',
+    'gaya',
+    'gayi',
+    'bache',
+    'bachi',
+    'bacha',
+    'aaye',
+    'aaya',
+    'aayi',
+    'ho',
+    'kitna',
+    'kitne',
+    'kitni',
+    'rate',
+    'kar',
+    'de',
+    'dena',
+    'hata',
+    'only',
+    'left',
+    'how',
+    'many',
+    'much',
+    'set',
+    'make',
+    'to',
+    'now',
     'abhi',
+    'aaj',
+    'kal',
+    'subah',
+    'sham',
+    'toh',
+    'saare',
+    'khatam',
+    'zero',
+    'bik',
+    'bech',
+    'sold',
     'jo',
     'photo',
     'picture',
@@ -824,9 +871,7 @@ class RulesParser implements CommandParser {
     've',
     'got',
     'register',
-    'kar',
     'do',
-    'dena',
   };
 
   static const _nameFiller = {

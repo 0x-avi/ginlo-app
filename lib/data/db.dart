@@ -108,6 +108,17 @@ class AppDb {
     return row.first['id'] as int;
   }
 
+  /// Changes one product's price, stock and/or name (Modify tab).
+  Future<void> updateProduct(int id, {double? price, int? stock, String? name}) async {
+    await db.update(
+      'products',
+      {'price': ?price, if (stock != null) 'stock': stock < 0 ? 0 : stock, if (name != null) 'name': name.trim()},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    _changed();
+  }
+
   Future<void> deleteProduct(int id) async {
     await db.delete('products', where: 'id = ?', whereArgs: [id]); // its angles go too (ON DELETE CASCADE)
     _changed();

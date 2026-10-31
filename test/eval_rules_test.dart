@@ -36,27 +36,34 @@ void main() {
           final w = wantActions[i] as Map, a = w['arguments'] as Map, g = got.actions[i];
           // "2 rupaye badha de": we compute price ± 2 directly; the benchmark expects get_price first.
           final tool = g.tool == Tool.changePrice ? 'get_price' : g.tool.id;
-          ok = tool == w['tool'] &&
+          ok =
+              tool == w['tool'] &&
               flat(g.product) == flat(a['product']) &&
               (a['qty'] == null || g.qty == a['qty']) &&
               (a['price'] == null || g.price == a['price'] || g.tool == Tool.changePrice) &&
               (a['new_name'] == null || flat(g.newName) == flat(a['new_name']));
         }
       }
-      final tool = want['status'] == 'needs_clarification' ? 'clarify' : (want['actions'] as List).first['tool'] as String;
+      final tool = want['status'] == 'needs_clarification'
+          ? 'clarify'
+          : (want['actions'] as List).first['tool'] as String;
       final t = byTool.putIfAbsent(tool, () => [0, 0]);
       t[1]++;
       if (ok) {
         correct++;
         t[0]++;
       } else {
-        misses.add('${c['instruction']}\n    want ${jsonEncode(want['actions'])}${want['clarification_question'] ?? ''}'
-            '\n    got  ${got.ready ? got.actions : 'ASK: ${got.question}'}');
+        misses.add(
+          '${c['instruction']}\n    want ${jsonEncode(want['actions'])}${want['clarification_question'] ?? ''}'
+          '\n    got  ${got.ready ? got.actions : 'ASK: ${got.question}'}',
+        );
       }
     }
     // ignore: avoid_print
-    print('\nRULES PARSER: $correct/${cases.length} correct (${(correct / cases.length * 100).toStringAsFixed(1)}%), '
-        'clarifications $clarifyOk/$clarifyTotal');
+    print(
+      '\nRULES PARSER: $correct/${cases.length} correct (${(correct / cases.length * 100).toStringAsFixed(1)}%), '
+      'clarifications $clarifyOk/$clarifyTotal',
+    );
     for (final e in byTool.entries) {
       // ignore: avoid_print
       print('  ${e.key.padRight(15)} ${e.value[0]}/${e.value[1]}');
