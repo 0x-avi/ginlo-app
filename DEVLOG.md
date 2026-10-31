@@ -68,3 +68,22 @@ the stream after the app is backgrounded. Now the camera is released on pause an
 
 **How it went:** verified on the phone in portrait, both landscapes and a direct flip: upright, unstretched,
 boxes on the objects. Lesson: one source of truth for rotation, used by both the picture and the frames.
+
+## 6. Dev log, prod smoothing, augmented teaching — this commit
+**Goal:** steady results in the shop app; a running log of changes; 6–8 captures per product with automatic
+variants so recognition survives dim light, glare, distance and products lying sideways.
+- `DEVLOG.md` (this file) + `CLAUDE.md` (rule: update this log every iteration).
+- `lib/ml/smoother.dart` + `test/smoother_test.dart` (6 tests): each item gets a short memory across frames —
+  shown only after 2 frames (one-frame ghost boxes never appear), name = majority vote over the last 4 frames,
+  box glides halfway to the new position, survives 2 missed frames, boxes mostly inside a bigger box hidden.
+- `lib/screens/bill_screen.dart`: prod always uses the smoothed items (boxes, names, counts, total); dev shows raw
+  per-frame output with a **"Prod view (smoothed)"** switch to compare.
+- `lib/ml/embedder.dart`: `teachVariants` — as seen, turned 90°/180°/270°, darker (×0.55), brighter (×1.4),
+  further away (more margin), closer (tight crop). Brightness `gain` added to the crop preparation.
+- `lib/ml/vision.dart`: `Vision.embedVariants()` fingerprints one box in all 8 variants (+ crop picture) in the
+  background; the old per-frame "all turns" option is gone.
+- `lib/screens/learn_screen.dart`: live view now runs detection only (faster); Capture makes the 8 variants;
+  Capture stops at 8, Save needs at least 6. A product = 6–8 captures × 8 variants = 48–64 fingerprints.
+
+**How it went:** analyze clean, 8 tests pass, installed on the phone. Not yet checked on the phone (it was
+locked): Capture timing, and prod view vs raw on Bill.

@@ -49,10 +49,15 @@ class _LearnViewState extends State<LearnView> {
   List<Product> _products = [];
   int? _productId;
   VisionResult? _last;
+  FrameData? _lastFrame; // the frame _last came from: Capture fingerprints it
 
-  /// Each capture: its fingerprint upright + turned 90/180/270° (so any orientation matches), and the crop.
+  /// Each capture: its fingerprints in every teach variant (turned, darker, brighter, further,
+  /// closer; see teachVariants) and the crop picture shown in the gallery.
   final _captures = <({List<Float32List> vectors, Uint8List crop})>[];
-  bool _saving = false;
+  bool _saving = false, _capturing = false;
+
+  /// Enough sides to recognise a product reliably, without wasting the shopkeeper's time.
+  static const minCaptures = 6, maxCaptures = 8;
 
   @override
   void initState() {
@@ -67,30 +72,33 @@ class _LearnViewState extends State<LearnView> {
   }
 
   Future<void> _onFrame(FrameData frame) async {
-    final det = await Models.detector(_detSpec), emb = await Models.embedder(_embSpec);
+    final det = await Models.detector(_detSpec);
     final wall = Stopwatch()..start();
-    // Fingerprint only the biggest box (the product you're holding up), and keep its crop.
-    final r = await Vision.analyze(
-      det,
-      frame,
-      embedder: emb,
-      conf: 0.2,
-      pick: EmbedPick.largest,
-      wantCrops: true,
-      allTurns: true,
-    );
-    PerfLog.instance.record('Learn: ${_detSpec.title} + ${_embSpec.title}', r, wall.elapsedMilliseconds);
-    if (mounted) setState(() => _last = r);
+    // Live view only needs the boxes; fingerprints are made when you tap Capture.
+    final r = await Vision.analyze(det, frame, conf: 0.2);
+    PerfLog.instance.record('Learn: ${_detSpec.title}', r, wall.elapsedMilliseconds);
+    if (mounted) {
+      setState(() {
+        _last = r;
+        _lastFrame = frame;
+      });
+    }
   }
 
-  void _capture() {
-    final r = _last;
+  Future<void> _capture() async {
+    final r = _last, frame = _lastFrame;
     final i = r?.largest ?? -1;
-    if (r == null || i < 0 || r.vectors[i] == null) {
+    if (r == null || frame == null || i < 0) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No product in view yet')));
       return;
     }
-    setState(() => _captures.add((vectors: [r.vectors[i]!, ...?r.turned[i]], crop: r.crops[i]!)));
+    setState(() => _capturing = true);
+    final c = await Vision.embedVariants(await Models.embedder(_embSpec), frame, r.detections[i].box);
+    if (!mounted) return;
+    setState(() {
+      _captures.add(c);
+      _capturing = false;
+    });
   }
 
   Future<void> _save() async {
@@ -170,7 +178,7 @@ class _LearnViewState extends State<LearnView> {
               padding: const EdgeInsets.all(6),
               children: [
                 if (_captures.isEmpty)
-                  const Center(child: Text('  Turn the product and tap Capture for each side (6–8 is good)')),
+                  const Center(child: Text('  Turn the product and tap Capture for each side: 6 to 8 sides')),
                 for (var i = 0; i < _captures.length; i++)
                   Padding(
                     padding: const EdgeInsets.only(right: 6),
@@ -200,17 +208,17 @@ class _LearnViewState extends State<LearnView> {
               children: [
                 Expanded(
                   child: FilledButton.tonalIcon(
-                    onPressed: _capture,
+                    onPressed: _capturing || _captures.length >= maxCaptures ? null : _capture,
                     icon: const Icon(Icons.camera),
-                    label: Text('Capture (${_captures.length})'),
+                    label: Text(_capturing ? 'Capturing…' : 'Capture ${_captures.length}/$maxCaptures'),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: _productId == null || _captures.isEmpty || _saving ? null : _save,
+                    onPressed: _productId == null || _captures.length < minCaptures || _saving ? null : _save,
                     icon: const Icon(Icons.save),
-                    label: const Text('Save'),
+                    label: Text(_captures.length < minCaptures ? 'Save (need $minCaptures)' : 'Save'),
                   ),
                 ),
               ],

@@ -51,9 +51,31 @@ class Embedder {
   return (x0: x0, y0: y0, w: x1 - x0, h: y1 - y0);
 }
 
+/// One way of looking at a taught product (see [teachVariants]).
+class Variant {
+  final String name;
+  final int turns; // quarter turns clockwise
+  final double gain; // brightness multiplier
+  final double pad; // margin around the box, as a fraction of its size (negative = tighter)
+  const Variant(this.name, {this.turns = 0, this.gain = 1, this.pad = 0.05});
+}
+
+/// Every capture in Learn is fingerprinted all these ways, so the product still matches when it's
+/// lying sideways, in a dim or bright shop, far away or close up. All from the one captured frame.
+const teachVariants = [
+  Variant('as seen'),
+  Variant('turned 90°', turns: 1),
+  Variant('upside down', turns: 2),
+  Variant('turned 270°', turns: 3),
+  Variant('darker', gain: 0.55),
+  Variant('brighter', gain: 1.4),
+  Variant('further away', pad: 0.35), // more surroundings, product smaller in the picture
+  Variant('closer', pad: -0.08), // tight crop, product fills the picture
+];
+
 /// Crop the box out of the frame, stretch it to 224x224, values 0..1 (NHWC).
-/// [turns] rotates the crop by that many quarter turns clockwise (for teaching every orientation).
-void prepareEmbedderInput(FrameData f, Rect box, Float32List out, {double pad = 0.05, int turns = 0}) {
+/// [turns] rotates the crop clockwise, [gain] scales brightness (teach variants).
+void prepareEmbedderInput(FrameData f, Rect box, Float32List out, {double pad = 0.05, int turns = 0, double gain = 1}) {
   const s = Embedder.size;
   final c = _cropRect(f, box, pad);
   for (var oy = 0; oy < s; oy++) {
@@ -71,9 +93,9 @@ void prepareEmbedderInput(FrameData f, Rect box, Float32List out, {double pad = 
         c.y0 + math.min<int>(c.h - 1, (cy * c.h).floor()),
       );
       final i = (oy * s + ox) * 3;
-      out[i] = (px >> 16) / 255;
-      out[i + 1] = ((px >> 8) & 0xFF) / 255;
-      out[i + 2] = (px & 0xFF) / 255;
+      out[i] = math.min(1, (px >> 16) / 255 * gain);
+      out[i + 1] = math.min(1, ((px >> 8) & 0xFF) / 255 * gain);
+      out[i + 2] = math.min(1, (px & 0xFF) / 255 * gain);
     }
   }
 }

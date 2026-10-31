@@ -8,6 +8,7 @@ import '../ml/embedder.dart';
 import '../ml/frame.dart';
 import '../ml/matcher.dart';
 import '../ml/models.dart';
+import '../ml/smoother.dart';
 import '../ml/vision.dart';
 import '../widgets/camera_feed.dart';
 import '../widgets/camera_layout.dart';
@@ -46,6 +47,12 @@ class _LiveBillState extends State<_LiveBill> {
   VisionResult? _last;
   List<Match> _matches = const [];
 
+  /// Prod shows steady results: items must persist across frames, names are voted over the last
+  /// 4 frames, boxes glide (see smoother.dart). Dev shows raw per-frame output unless [_prodView].
+  final _smoother = FrameSmoother();
+  List<SteadyItem> _steady = const [];
+  bool _prodView = false;
+
   @override
   void initState() {
     super.initState();
@@ -77,30 +84,43 @@ class _LiveBillState extends State<_LiveBill> {
     setState(() {
       _last = r;
       _matches = [for (final v in r.vectors) v == null ? const Match(null, null, 0, 0, null) : _matcher.match(v)];
+      _steady = _smoother.update([
+        for (var i = 0; i < r.detections.length; i++)
+          Sighting(r.detections[i].box, _matches[i].name, _matches[i].price),
+      ]);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final r = _last;
-    final tags = <BoxTag>[];
-    if (r != null) {
+    final smooth = !isDev || _prodView;
+
+    // What to draw and bill: steady items (prod) or this frame's raw boxes (dev).
+    final items = <({Rect box, String? name, double price, String text})>[];
+    if (smooth) {
+      for (final it in _steady) {
+        items.add((box: it.box, name: it.name, price: it.price, text: it.name ?? 'Unknown'));
+      }
+    } else if (r != null) {
       for (var i = 0; i < r.detections.length; i++) {
         final d = r.detections[i], m = _matches[i];
-        final name = m.known ? m.name! : 'Unknown';
-        final text = isDev ? '$name ${m.score.toStringAsFixed(2)} · ${d.label} ${d.score.toStringAsFixed(2)}' : name;
-        tags.add(BoxTag(d.box, text, m.known ? Colors.greenAccent : Colors.orangeAccent));
+        final text = '${m.name ?? 'Unknown'} ${m.score.toStringAsFixed(2)} · ${d.label} ${d.score.toStringAsFixed(2)}';
+        items.add((box: d.box, name: m.name, price: m.price, text: text));
       }
     }
+    final tags = [
+      for (final it in items) BoxTag(it.box, it.text, it.name != null ? Colors.greenAccent : Colors.orangeAccent),
+    ];
 
-    // What's in view right now: product -> count (the bill this frame would make).
+    // What's in view right now: product -> count (the bill this view would make).
     final counts = <String, int>{};
     final prices = <String, double>{};
-    for (final m in _matches.where((m) => m.known)) {
-      counts[m.name!] = (counts[m.name!] ?? 0) + 1;
-      prices[m.name!] = m.price;
+    for (final it in items.where((it) => it.name != null)) {
+      counts[it.name!] = (counts[it.name!] ?? 0) + 1;
+      prices[it.name!] = it.price;
     }
-    final unknown = _matches.where((m) => !m.known).length;
+    final unknown = items.where((it) => it.name == null).length;
     final total = counts.entries.fold(0.0, (s, e) => s + e.value * prices[e.key]!);
 
     return CameraLayout(
@@ -155,6 +175,13 @@ class _LiveBillState extends State<_LiveBill> {
               '${_matcher.angles.length} angles in catalog · screen ${CameraFeed.lastScreenDegrees}° → frame ${CameraFeed.lastRotation}°',
               style: const TextStyle(fontSize: 12),
             ),
+          ),
+        if (isDev)
+          SwitchListTile(
+            dense: true,
+            title: const Text('Prod view (smoothed)'),
+            value: _prodView,
+            onChanged: (v) => setState(() => _prodView = v),
           ),
         if (isDev)
           Row(
