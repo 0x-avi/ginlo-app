@@ -1,0 +1,14 @@
+packet
+bottle
+box
+can
+jar
+pouch
+bag
+carton
+tube
+soap bar
+chocolate bar
+biscuit packet
+electronic device
+product

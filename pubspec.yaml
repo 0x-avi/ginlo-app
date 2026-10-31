@@ -62,6 +62,12 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  # `flutter run` without --flavor builds the dev app (live boxes + scores)
+  default-flavor: dev
+
+  # On-device models (detectors + embedders) and their class names
+  assets:
+    - assets/models/
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
