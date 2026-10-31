@@ -46,3 +46,6 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Large on-device models (copied to the phone over adb, not shipped in the app)
+models_ondevice/

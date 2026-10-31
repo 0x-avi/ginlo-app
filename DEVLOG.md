@@ -177,3 +177,8 @@ old upgrade and can't be recovered.
   `delete_product`, `show_catalog`) or `needs_clarification`. Use it to score the rules parser, FunctionGemma and a
   quantized Qwen3-0.6B (exact tool + arguments, clarification when needed); if none is good enough, fine-tune on it.
   Speech side: check Whisper on Hindi/Hinglish audio; Sarvam API is the online fallback (later — stay offline for now).
+- **Later test sets** (31 Oct): (1) accent/voice test data ("omnivoice") for speech-to-text — Whisper vs Android
+  recognizer on Indian accents, Hindi and Hinglish; (2) image and video test sets of items for detection,
+  recognition and counting (the smoothing benchmark); (3) the offline LLM command test (`eval/voice_eval_200.json`).
+  On-device model files already downloaded to `models_ondevice/` (FunctionGemma 270M, Qwen3 0.6B int4, Whisper
+  base/small); the flutter_gemma / whisper_ggml packages were removed again for the demo build (not wired yet).

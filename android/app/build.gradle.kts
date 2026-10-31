@@ -30,6 +30,22 @@ android {
         versionName = flutter.versionName
     }
 
+    // flutter_gemma brings MediaPipe parts GinLo doesn't use (image generation, vision, its own
+    // embedding models): leave them out of the app. And ship 64-bit ARM only (every recent phone):
+    // the on-device LLM runtime is ~50 MB per chip type, so arm32 + x86_64 nearly tripled the app.
+    packaging {
+        jniLibs {
+            excludes += listOf(
+                "lib/armeabi-v7a/**",
+                "lib/x86_64/**",
+                "**/libmediapipe_tasks_vision_jni.so",
+                "**/libmediapipe_tasks_vision_image_generator_jni.so",
+                "**/libgemma_embedding_model_jni.so",
+                "**/libgecko_embedding_model_jni.so",
+            )
+        }
+    }
+
     // Two apps from one codebase, installable side by side:
     //   dev  -> "GinLo Dev" (in.ginlo.ginlo.dev): live boxes, scores, model picker
     //   prod -> "GinLo"     (in.ginlo.ginlo):     the shopkeeper app
@@ -55,6 +71,7 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 }
