@@ -338,6 +338,7 @@ class _LiveBillState extends State<_LiveBill> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
           child: FilledButton.icon(
+            style: FilledButton.styleFrom(backgroundColor: GinloColors.blue, foregroundColor: Colors.white),
             onPressed: _addToBill,
             icon: const Icon(Icons.add_shopping_cart),
             label: const Text('Add to bill'),

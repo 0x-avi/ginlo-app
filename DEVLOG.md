@@ -195,6 +195,13 @@ come back, and a fast-moving box lost its track (too little overlap) and restart
 
 ---
 
+## 14. Landscape rail matches the portrait bar — this commit
+- `main.dart`: the landscape rail was a stock NavigationRail (Bill a grey pill). Now both layouts build the same
+  items (`tab()`, round blue `bill`) via `slot()`: shares of the bar in portrait, 76 px slots in a white rail in landscape.
+- Bill: "Add to bill" is solid blue with white text (was pale).
+
+---
+
 ## Backlog (planned, not built)
 - **Smoothing benchmark** (requested 31 Oct, after entry 7; extended after entry 9): the user builds a test set of
   scenes with known item counts; record ~5 s of raw per-frame results per scene (about how long a vendor waits

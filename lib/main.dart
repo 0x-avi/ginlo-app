@@ -90,52 +90,15 @@ class _AppShellState extends State<AppShell> {
       ],
     );
 
-    if (landscape) {
-      final all = [
-        ..._left,
-        (icon: Icons.receipt_long_outlined, selected: Icons.receipt_long, label: 'Bill', index: Tabs.bill),
-        ...right,
-      ];
-      return Scaffold(
-        body: SafeArea(
-          child: Row(
-            children: [
-              // Scrolls when all the tabs don't fit on a short landscape screen.
-              LayoutBuilder(
-                builder: (context, c) => SingleChildScrollView(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: c.maxHeight),
-                    child: IntrinsicHeight(
-                      child: NavigationRail(
-                        selectedIndex: all.indexWhere((t) => t.index == _tab),
-                        onDestinationSelected: (i) => _select(all[i].index),
-                        labelType: NavigationRailLabelType.all,
-                        destinations: [
-                          for (final t in all)
-                            NavigationRailDestination(
-                              icon: Icon(t.icon),
-                              selectedIcon: Icon(t.selected),
-                              label: Text(t.label),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const VerticalDivider(width: 1),
-              Expanded(child: body),
-            ],
-          ),
-        ),
-      );
-    }
+    // One look for both layouts: a bar at the bottom (portrait) or a rail on the left (landscape).
+    // Each item fills its share of the bar, or is a fixed 76 px tall slot in the rail.
+    Widget slot(Widget child) => landscape ? SizedBox(height: 76, width: 88, child: child) : Expanded(child: child);
 
     Widget tab(_Tab t) {
       final selected = _tab == t.index;
       final color = selected ? GinloColors.blue : GinloColors.muted;
-      return Expanded(
-        child: InkResponse(
+      return slot(
+        InkResponse(
           onTap: () => _select(t.index),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -154,8 +117,8 @@ class _AppShellState extends State<AppShell> {
 
     // Bill: a round blue button in the middle of the bar (inside it, so it never covers a screen).
     final billSelected = _tab == Tabs.bill;
-    final bill = Expanded(
-      child: InkResponse(
+    final bill = slot(
+      InkResponse(
         onTap: () => _select(Tabs.bill),
         child: Center(
           child: Container(
@@ -181,6 +144,34 @@ class _AppShellState extends State<AppShell> {
         ),
       ),
     );
+
+    if (landscape) {
+      return Scaffold(
+        body: SafeArea(
+          child: Row(
+            children: [
+              // Same items as the portrait bar, top to bottom; scrolls if the screen is too short.
+              ColoredBox(
+                color: Colors.white,
+                child: LayoutBuilder(
+                  builder: (context, c) => SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: c.maxHeight),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [..._left.map(tab), bill, ...right.map(tab)],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const VerticalDivider(width: 1),
+              Expanded(child: body),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       body: body,
