@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 /// Camera screen layout that works however the phone is held:
-/// portrait -> camera on top, controls below (scroll if they don't fit);
+/// portrait -> camera on top, controls below in a panel you resize by dragging its handle (it scrolls);
 /// landscape -> camera fills the screen, controls float in a see-through box top-right
 /// that can be hidden with one tap.
 class CameraLayout extends StatefulWidget {
@@ -17,6 +17,11 @@ class CameraLayout extends StatefulWidget {
 
 class _CameraLayoutState extends State<CameraLayout> {
   bool _panelOpen = true;
+
+  /// Portrait: the controls panel's share of the screen height. Drag the handle to change it;
+  /// shared by every camera screen and kept while the app runs.
+  static double _panelShare = 0.24;
+  static const _minShare = 0.10, _maxShare = 0.70;
 
   // Portrait and landscape are different layouts; without a fixed identity Flutter would see
   // a *new* camera widget on every turn and open a second camera session while the first is
@@ -40,10 +45,24 @@ class _CameraLayoutState extends State<CameraLayout> {
       return Column(
         children: [
           Expanded(child: camera),
-          ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: size.height * 0.42),
-            child: controls,
+          // Drag handle: up = bigger panel, down = bigger camera.
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onVerticalDragUpdate: (d) => setState(() {
+              _panelShare = (_panelShare - d.delta.dy / size.height).clamp(_minShare, _maxShare);
+            }),
+            child: SizedBox(
+              height: 22,
+              child: Center(
+                child: Container(
+                  width: 44,
+                  height: 5,
+                  decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(3)),
+                ),
+              ),
+            ),
           ),
+          SizedBox(height: size.height * _panelShare, child: controls),
         ],
       );
     }

@@ -132,6 +132,24 @@ with the amount → paid; plus the earnings dashboard from the mock-ups.
 off wireless debugging while this was built. To check: set the UPI ID (Home → Edit), Add to bill → Done → scan
 the QR with another phone (₹1 test), Paid → Home updates.
 
+## 9. Fix the angle-upgrade regression; resizable portrait panel — `5a13441` + this commit
+**What broke:** after "Upgrade 18 old angles" recognition dropped (power bank 0.84 → 0.60). The upgrade *replaced*
+each angle's original fingerprint (made from the full camera frame) with ones re-made from the stored crop
+picture — and that picture was capped at 224 px on its **long** side, so a tall can was kept ~90 px wide.
+Measured on the laptop: similarity of the re-made fingerprint to the original was 0.96–0.98 for square crops but
+**0.77–0.90 for long ones** (cans, power bank).
+- `db.dart` v3: `embeddings.capture` groups one Capture's 8 fingerprints, `variant` names each, the crop picture
+  is stored once per capture (was copied onto all 8 rows). Old rows migrate as `legacy`.
+- `addCapture()` replaces `addAngle()`; the upgrade now only **adds** variants (`addVariants`) and never deletes
+  the original. Products shows "re-teach for better recognition" for products with only legacy angles.
+- `cropJpeg()`: short side kept at 224 px (long side ≤ 448), JPEG quality 92.
+- `camera_layout.dart`: portrait controls are a **resizable panel** (drag handle; starts at 24 % of the screen,
+  10–70 %, remembered) that scrolls; Bill puts **Add to bill** and the bill bar at the top of it.
+
+**How it went:** installed both apps; portrait preview is now much taller, Add to bill always visible.
+**To do on the phone:** re-teach the 3 products (6 captures each) — their original fingerprints were deleted by the
+old upgrade and can't be recovered.
+
 ---
 
 ## Backlog (planned, not built)

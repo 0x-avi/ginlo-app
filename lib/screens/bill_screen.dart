@@ -330,6 +330,38 @@ class _LiveBillState extends State<_LiveBill> {
         overlay: CustomPaint(painter: TagPainter(tags)),
       ),
       panel: [
+        // The main action first, so it stays visible however small the panel is dragged.
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: FilledButton.icon(
+            onPressed: _addToBill,
+            icon: const Icon(Icons.add_shopping_cart),
+            label: const Text('Add to bill'),
+          ),
+        ),
+        // The bill so far (after one or more photos): tap to see it, edit it, or finish.
+        ListenableBuilder(
+          listenable: BillDraft.instance,
+          builder: (context, _) {
+            final draft = BillDraft.instance;
+            if (draft.isEmpty) return const SizedBox(height: 8);
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48)),
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InvoiceScreen())),
+                child: Row(
+                  children: [
+                    const Icon(Icons.receipt_long, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text('Bill: ${draft.itemCount} items')),
+                    Text('₹${draft.total.toStringAsFixed(2)}  →', style: const TextStyle(fontWeight: FontWeight.w700)),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
         if (_matcher.isEmpty)
           const Padding(
             padding: EdgeInsets.all(8),
@@ -367,37 +399,6 @@ class _LiveBillState extends State<_LiveBill> {
               ),
             ],
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: FilledButton.icon(
-            onPressed: _addToBill,
-            icon: const Icon(Icons.add_shopping_cart),
-            label: const Text('Add to bill'),
-          ),
-        ),
-        // The bill so far (after one or more photos): tap to see it, edit it, or finish.
-        ListenableBuilder(
-          listenable: BillDraft.instance,
-          builder: (context, _) {
-            final draft = BillDraft.instance;
-            if (draft.isEmpty) return const SizedBox(height: 8);
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48)),
-                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InvoiceScreen())),
-                child: Row(
-                  children: [
-                    const Icon(Icons.receipt_long, size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text('Bill: ${draft.itemCount} items')),
-                    Text('₹${draft.total.toStringAsFixed(2)}  →', style: const TextStyle(fontWeight: FontWeight.w700)),
-                  ],
-                ),
-              ),
-            );
-          },
         ),
         if (isDev && r != null)
           Padding(
