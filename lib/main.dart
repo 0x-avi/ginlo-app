@@ -6,6 +6,7 @@ import 'screens/catalog_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/lab_screen.dart';
 import 'screens/learn_screen.dart';
+import 'screens/modify_screen.dart';
 import 'ui/theme.dart';
 
 void main() {
@@ -28,19 +29,27 @@ class GinLoApp extends StatelessWidget {
   }
 }
 
-/// One tab: its icons and label.
-typedef _Tab = ({IconData icon, IconData selected, String label});
+/// Which screen each tab shows. The numbers are positions in the IndexedStack below.
+abstract final class Tabs {
+  static const bill = 0, home = 1, products = 2, learn = 3, modify = 4, lab = 5;
+}
 
-const List<_Tab> _tabs = [
-  (icon: Icons.receipt_long_outlined, selected: Icons.receipt_long, label: 'Bill'),
-  (icon: Icons.home_outlined, selected: Icons.home, label: 'Home'),
-  (icon: Icons.inventory_2_outlined, selected: Icons.inventory_2, label: 'Products'),
-  (icon: Icons.school_outlined, selected: Icons.school, label: 'Learn'),
-  (icon: Icons.science_outlined, selected: Icons.science, label: 'Lab'), // dev only
+/// One tab: its icons, label and screen index.
+typedef _Tab = ({IconData icon, IconData selected, String label, int index});
+
+const _left = <_Tab>[
+  (icon: Icons.home_outlined, selected: Icons.home, label: 'Home', index: Tabs.home),
+  (icon: Icons.inventory_2_outlined, selected: Icons.inventory_2, label: 'Products', index: Tabs.products),
 ];
+const _right = <_Tab>[
+  (icon: Icons.school_outlined, selected: Icons.school, label: 'Learn', index: Tabs.learn),
+  (icon: Icons.mic_none, selected: Icons.mic, label: 'Modify', index: Tabs.modify),
+];
+const _labTab = (icon: Icons.science_outlined, selected: Icons.science, label: 'Lab', index: Tabs.lab);
 
-/// Tabs: Bill (opens first), Home (earnings), Catalog, Learn; dev adds Lab.
-/// Portrait: tab bar at the bottom. Landscape: a rail on the left, so the camera keeps its height.
+/// The app's frame: tabs around a big round Bill button in the middle.
+/// Portrait: bottom bar with the Bill button sitting in a notch. Landscape: a rail on the left,
+/// so the camera keeps its height. Opens on Bill.
 ///
 /// Stateful because it remembers which tab is selected.
 class AppShell extends StatefulWidget {
@@ -51,17 +60,19 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  int _tab = 0; // Bill: the shopkeeper lands straight on billing
+  int _tab = Tabs.bill; // the shopkeeper lands straight on billing
 
   // Portrait (bottom bar) and landscape (side rail) wrap the tabs differently; this key keeps the
   // tabs - and the running camera - the same widgets across the switch instead of rebuilding them.
   final _tabsKey = GlobalKey();
 
+  void _select(int i) => setState(() => _tab = i);
+
   @override
   Widget build(BuildContext context) {
-    final tabs = isDev ? _tabs : _tabs.sublist(0, 4);
     final size = MediaQuery.sizeOf(context);
     final landscape = size.width > size.height;
+    final right = [..._right, if (isDev) _labTab];
 
     // IndexedStack keeps every tab alive, so switching tabs doesn't reset them
     // (e.g. a half-finished bill survives a quick look at the catalog).
@@ -70,28 +81,47 @@ class _AppShellState extends State<AppShell> {
       key: _tabsKey,
       index: _tab,
       children: [
-        BillScreen(active: _tab == 0),
+        BillScreen(active: _tab == Tabs.bill, onTeach: () => _select(Tabs.learn)),
         const HomeScreen(),
         const CatalogScreen(),
-        LearnScreen(active: _tab == 3),
-        if (isDev) LabScreen(active: _tab == 4),
+        LearnScreen(active: _tab == Tabs.learn),
+        const ModifyScreen(),
+        if (isDev) LabScreen(active: _tab == Tabs.lab),
       ],
     );
-    void select(int i) => setState(() => _tab = i);
 
     if (landscape) {
+      final all = [
+        ..._left,
+        (icon: Icons.receipt_long_outlined, selected: Icons.receipt_long, label: 'Bill', index: Tabs.bill),
+        ...right,
+      ];
       return Scaffold(
         body: SafeArea(
           child: Row(
             children: [
-              NavigationRail(
-                selectedIndex: _tab,
-                onDestinationSelected: select,
-                labelType: NavigationRailLabelType.all,
-                destinations: [
-                  for (final t in tabs)
-                    NavigationRailDestination(icon: Icon(t.icon), selectedIcon: Icon(t.selected), label: Text(t.label)),
-                ],
+              // Scrolls when all the tabs don't fit on a short landscape screen.
+              LayoutBuilder(
+                builder: (context, c) => SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: c.maxHeight),
+                    child: IntrinsicHeight(
+                      child: NavigationRail(
+                        selectedIndex: all.indexWhere((t) => t.index == _tab),
+                        onDestinationSelected: (i) => _select(all[i].index),
+                        labelType: NavigationRailLabelType.all,
+                        destinations: [
+                          for (final t in all)
+                            NavigationRailDestination(
+                              icon: Icon(t.icon),
+                              selectedIcon: Icon(t.selected),
+                              label: Text(t.label),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ),
               const VerticalDivider(width: 1),
               Expanded(child: body),
@@ -100,15 +130,64 @@ class _AppShellState extends State<AppShell> {
         ),
       );
     }
+
+    Widget tab(_Tab t) {
+      final selected = _tab == t.index;
+      final color = selected ? GinloColors.blue : GinloColors.muted;
+      return Expanded(
+        child: InkResponse(
+          onTap: () => _select(t.index),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(selected ? t.selected : t.icon, color: color),
+              const SizedBox(height: 2),
+              Text(
+                t.label,
+                style: TextStyle(fontSize: 12, color: color, fontWeight: selected ? FontWeight.w700 : FontWeight.w500),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: body,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tab,
-        onDestinationSelected: select,
-        destinations: [
-          for (final t in tabs)
-            NavigationDestination(icon: Icon(t.icon), selectedIcon: Icon(t.selected), label: t.label),
-        ],
+      // The big round Bill button sits in a notch in the middle of the bar.
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: SizedBox(
+        width: 68,
+        height: 68,
+        child: FloatingActionButton(
+          heroTag: 'bill',
+          shape: const CircleBorder(),
+          backgroundColor: _tab == Tabs.bill ? GinloColors.blue : Colors.white,
+          foregroundColor: _tab == Tabs.bill ? Colors.white : GinloColors.blue,
+          elevation: 4,
+          onPressed: () => _select(Tabs.bill),
+          child: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.document_scanner, size: 28),
+              Text('Bill', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: BottomAppBar(
+        color: Colors.white,
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8,
+        height: 68,
+        padding: EdgeInsets.zero,
+        child: Row(
+          children: [
+            ..._left.map(tab),
+            const SizedBox(width: 76), // room for the Bill button
+            ...right.map(tab),
+          ],
+        ),
       ),
     );
   }

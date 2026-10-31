@@ -25,23 +25,27 @@ final _embSpec = embedderSpecs[Models.billEmbedder];
 /// shop's own catalog. "Add to bill" freezes what's in view into the bill (BillDraft) and opens the
 /// invoice; from there: more photos, or Done -> payment QR.
 class BillScreen extends StatelessWidget {
-  const BillScreen({super.key, required this.active});
+  const BillScreen({super.key, required this.active, required this.onTeach});
 
   /// The camera only runs while the Bill tab is on screen.
   final bool active;
+
+  /// Switches to the Learn tab (from the "teach your first product" card).
+  final VoidCallback onTeach;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       // No title bar in landscape: the camera needs the height.
       appBar: _portrait(context) ? const GinloHeader() : null,
-      body: active ? const _LiveBill() : const SizedBox.shrink(),
+      body: active ? _LiveBill(onTeach: onTeach) : const SizedBox.shrink(),
     );
   }
 }
 
 class _LiveBill extends StatefulWidget {
-  const _LiveBill();
+  const _LiveBill({required this.onTeach});
+  final VoidCallback onTeach;
 
   @override
   State<_LiveBill> createState() => _LiveBillState();
@@ -362,10 +366,29 @@ class _LiveBillState extends State<_LiveBill> {
             );
           },
         ),
+        // Nothing taught yet: the camera can't name anything, so point to Learn instead.
         if (_matcher.isEmpty)
-          const Padding(
-            padding: EdgeInsets.all(8),
-            child: Text('No products taught yet: add them in Learn, then they show up here by name.'),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: GinloCard(
+              onTap: widget.onTeach,
+              child: const Row(
+                children: [
+                  Icon(Icons.school, color: GinloColors.blue, size: 32),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Teach your first product', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                        Text('Show it to the camera from 6 sides, then it\'s billed by name.'),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right),
+                ],
+              ),
+            ),
           ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
