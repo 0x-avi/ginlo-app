@@ -49,3 +49,9 @@ app.*.map.json
 
 # Large on-device models (copied to the phone over adb, not shipped in the app)
 models_ondevice/
+
+# Personal working notes (kept locally, not published)
+CLAUDE.md
+DEVLOG.md
+# Written by test/eval_rules_test.dart on every run
+eval/rules_misses.txt

@@ -31,4 +31,4 @@ Download the Android APK (arm64, Android 8+) from
 Flutter, Dart, SQLite, TensorFlow Lite (YOLOE detector, MobileNet-V3 embeddings), Google ML Kit OCR,
 on-device speech recognition, UPI QR (qr_flutter), pdf, fl_chart. Built with Claude Code.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md), [FLOWS.md](FLOWS.md) and [DEVLOG.md](DEVLOG.md) for how it works.
+See [ARCHITECTURE.md](ARCHITECTURE.md) and [FLOWS.md](FLOWS.md) for how it works.

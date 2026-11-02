@@ -46,7 +46,6 @@ assets/models/              .tflite models + class names
 android/app/src/main/kotlin/.../MainActivity.kt   tells Dart the screen's rotation
 test/                       widget test + smoother tests
 tools/inline_buffers.py     fixes newly exported models for the phone's TFLite runtime
-DEVLOG.md                   what changed each iteration, and why
 ```
 
 **How a frame flows:** `CameraFeed` → `FrameData` → `Vision.analyze` (background isolate: `detector.dart` finds boxes,
