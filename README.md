@@ -1,7 +1,9 @@
 # GinLo: Point. Bill. Grow.
 
 Offline AI billing and growth insights for India’s kirana stores, on the phone the shopkeeper already owns.
-Paytm Build for India AI Hackathon · Track 1: Merchant Growth AI · Team Velox
+
+> 🏆 **1st place, Paytm Build for India AI Hackathon** (Track 1: Merchant Growth AI), out of 1000+ participants.
+> Built solo as Team Velox; the first working prototype was built in 4 hours.
 
 ## Demo video
 
