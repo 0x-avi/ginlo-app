@@ -53,5 +53,6 @@ models_ondevice/
 # Personal working notes (kept locally, not published)
 CLAUDE.md
 DEVLOG.md
+LEARNING.md
 # Written by test/eval_rules_test.dart on every run
 eval/rules_misses.txt
