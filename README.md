@@ -7,7 +7,9 @@ Offline AI billing and growth insights for India’s kirana stores, on the phone
 
 ## Demo video
 
-**[Watch the demo (30 s)](https://github.com/0x-avi/ginlo-app/releases/download/v1.0-demo/GinLo_demo.mp4)**
+<a href="https://github.com/0x-avi/ginlo-app/releases/download/v1.0-demo/GinLo_demo.mp4"><img src="docs/demo.gif" width="360" alt="GinLo demo: camera recognises items and builds the bill, teaching a new product, Hinglish edits, sales trends"></a>
+
+Preview above is silent; **[watch the full demo with voiceover (30 s)](https://github.com/0x-avi/ginlo-app/releases/download/v1.0-demo/GinLo_demo.mp4)**.
 
 ## Try it
 
