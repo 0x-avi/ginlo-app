@@ -1,3 +1,7 @@
+
+
+https://github.com/user-attachments/assets/d5a237cf-bac8-46c0-ba65-24d9d5aa025b
+
 # GinLo: Point. Bill. Grow.
 
 Offline AI billing and growth insights for India’s kirana stores, on the phone the shopkeeper already owns.
@@ -7,9 +11,9 @@ Offline AI billing and growth insights for India’s kirana stores, on the phone
 
 ## Demo video
 
-<a href="https://github.com/0x-avi/ginlo-app/releases/download/v1.0-demo/GinLo_demo.mp4"><img src="docs/demo.gif" width="360" alt="GinLo demo: camera recognises items and builds the bill, teaching a new product, Hinglish edits, sales trends"></a>
+https://github.com/user-attachments/assets/44c4371e-fb35-4338-95dd-4f2c192cbd38
 
-Preview above is silent; **[watch the full demo with voiceover (30 s)](https://github.com/0x-avi/ginlo-app/releases/download/v1.0-demo/GinLo_demo.mp4)**.
+
 
 ## Try it
 
