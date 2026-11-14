@@ -1,7 +1,3 @@
-
-
-https://github.com/user-attachments/assets/d5a237cf-bac8-46c0-ba65-24d9d5aa025b
-
 # GinLo: Point. Bill. Grow.
 
 Offline AI billing and growth insights for India’s kirana stores, on the phone the shopkeeper already owns.
@@ -12,8 +8,6 @@ Offline AI billing and growth insights for India’s kirana stores, on the phone
 ## Demo video
 
 https://github.com/user-attachments/assets/44c4371e-fb35-4338-95dd-4f2c192cbd38
-
-
 
 ## Try it
 
